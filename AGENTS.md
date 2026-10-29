@@ -20,7 +20,10 @@ unlock after a free 3-entry cap.
 ## Tech Stack
 - SwiftUI + SwiftData + MapKit + CoreLocation
 - StoreKit 2 (planned, not yet wired up)
-- iOS 27+, iPhone only (TARGETED_DEVICE_FAMILY = 1)
+- Deployment target iOS 17.6 (built/indexed with the iOS 27 SDK in Xcode — don't assume
+  iOS 18+-only APIs are available; the `Tab(_:systemImage:content:)` TabView initializer
+  isn't, use classic `TabView` + `.tabItem` instead, confirmed 2026-10-28), iPhone only
+  (TARGETED_DEVICE_FAMILY = 1)
 - `@Observable` / MV pattern (no heavy architecture)
 - Swift Testing (NOT XCTest) for any future tests
 
@@ -56,8 +59,7 @@ Pizza Lover/
   in, verified syncing live across Brent's iPhone and iPad on the same Apple ID (2026-10-28)
 - **M3 "Nearby Places UI"** — DONE: `NearbyPizzaListView` (MapKit search, distance-sorted list,
   pull-to-refresh), `RestaurantDetailView` (favorite toggle, pizza-entry history, "I Ate Pizza
-  Here" button that links a bare default-score `PizzaEntry`), `ContentView` now just hosts
-  `NearbyPizzaListView` in a `NavigationStack` (2026-10-28)
+  Here" button — this button's behavior was replaced in M4, see below) (2026-10-28)
 - **M4 "Pizza Logging & Rankings"** — DONE: `PizzaEntryFormView` (real scoring form, sheet
   presentation, 4 independent 1-10 sliders with Overall Taste visually separated under "Your
   Gut Feeling", optional notes `TextEditor`) replaces the old bare-insert placeholder behind
