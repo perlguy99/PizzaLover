@@ -6,12 +6,26 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct Pizza_LoverApp: App {
+    let modelContainer: ModelContainer
+
+    init() {
+        let schema = Schema([Restaurant.self, PizzaEntry.self, Achievement.self])
+        let configuration = ModelConfiguration(schema: schema, cloudKitDatabase: .automatic)
+        do {
+            modelContainer = try ModelContainer(for: schema, configurations: [configuration])
+        } catch {
+            fatalError("Could not create ModelContainer: \(error)")
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             ContentView()
         }
+        .modelContainer(modelContainer)
     }
 }
