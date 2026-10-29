@@ -16,6 +16,8 @@ unlock after a free 3-entry cap.
    always a separate manual entry.
 4. **No login screen.** CloudKit will ride the user's Apple ID automatically once wired up;
    no account system is ever built.
+5. **Accessibility is mandatory, not a pass at the end.** VoiceOver labels, Reduce Motion,
+   and Dynamic Type get considered while building each view, not bolted on afterward.
 
 ## Tech Stack
 - SwiftUI + SwiftData + MapKit + CoreLocation
@@ -55,6 +57,13 @@ Pizza Lover/
   `AchievementDefinition` (plain struct, display copy only) to keep title/description/icon
   text out of any future CloudKit schema
 - No Yelp, no API keys, no `Configuration/Secrets.swift` — MapKit needs none of that
+- Test everything that's testable and makes sense to test — real business logic (score
+  gating, `AchievementEngine` rules, `RestaurantPoolFilter`, `ImageProcessing`) gets Swift
+  Testing coverage. Skip tests that genuinely don't make sense (thin SwiftUI view bodies,
+  trivial wrappers) — don't test for the sake of a number.
+- Code stays readable over clever. No obfuscated one-liners or cute tricks. Comment the WHY
+  when a real decision got made (a workaround, a non-obvious constraint) — not what the code
+  already says plainly.
 
 ## Development Milestones
 - **M1 "Local Data Slice"** — DONE: SwiftData models (Restaurant, PizzaEntry, Achievement,
