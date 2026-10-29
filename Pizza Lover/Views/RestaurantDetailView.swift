@@ -9,7 +9,17 @@ import SwiftData
 struct RestaurantDetailView: View {
     @Bindable var restaurant: Restaurant
     @Environment(\.modelContext) private var modelContext
+    @Environment(StoreManager.self) private var store
+    @Query private var allEntries: [PizzaEntry]
     @State private var isShowingPizzaEntryForm = false
+
+    /// Early visual cue only — the real gate is the live count check in
+    /// `PizzaEntryFormView.save()`, which re-fetches at save time in case
+    /// CloudKit synced in new entries from another device since this screen
+    /// rendered.
+    private var isAtFreeTierCap: Bool {
+        !store.isUnlocked && allEntries.count >= PizzaEntryGate.freeTierCap
+    }
 
     var body: some View {
         List {
@@ -41,8 +51,21 @@ struct RestaurantDetailView: View {
             }
 
             Section {
-                Button("I Ate Pizza Here") {
+                Button {
                     isShowingPizzaEntryForm = true
+                } label: {
+                    if isAtFreeTierCap {
+                        Label("I Ate Pizza Here", systemImage: "lock.fill")
+                            .foregroundStyle(.secondary)
+                    } else {
+                        Text("I Ate Pizza Here")
+                    }
+                }
+
+                if isAtFreeTierCap {
+                    Text("Free limit of \(PizzaEntryGate.freeTierCap) entries reached — unlock for unlimited.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
                 }
             }
         }
@@ -81,4 +104,5 @@ private struct PizzaEntryRow: View {
         RestaurantDetailView(restaurant: Restaurant())
     }
     .modelContainer(for: [Restaurant.self, PizzaEntry.self, Achievement.self], inMemory: true)
+    .environment(StoreManager())
 }

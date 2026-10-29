@@ -12,6 +12,7 @@ struct PizzaEntryFormView: View {
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
+    @Environment(StoreManager.self) private var store
 
     @State private var crustScore: Double = 5
     @State private var sauceScore: Double = 5
@@ -23,6 +24,7 @@ struct PizzaEntryFormView: View {
     @State private var isShowingPhotoSourceDialog = false
     @State private var isShowingCamera = false
     @State private var photosPickerItem: PhotosPickerItem?
+    @State private var isShowingPaywall = false
 
     private var isCameraAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
@@ -90,10 +92,22 @@ struct PizzaEntryFormView: View {
                     photosPickerItem = nil
                 }
             }
+            .sheet(isPresented: $isShowingPaywall) {
+                PaywallView { isShowingPaywall = false }
+            }
         }
     }
 
     private func save() {
+        // Re-fetch the live count right here instead of trusting anything
+        // cached from when the screen rendered — CloudKit sync from another
+        // device could have changed it in the meantime.
+        let currentCount = (try? modelContext.fetchCount(FetchDescriptor<PizzaEntry>())) ?? 0
+        guard PizzaEntryGate.canSaveNewEntry(currentCount: currentCount, isUnlocked: store.isUnlocked) else {
+            isShowingPaywall = true
+            return
+        }
+
         let entry = PizzaEntry()
         entry.crustScore = Int(crustScore)
         entry.sauceScore = Int(sauceScore)
@@ -181,4 +195,5 @@ private struct ScoreSlider: View {
 #Preview {
     PizzaEntryFormView(restaurant: Restaurant())
         .modelContainer(for: [Restaurant.self, PizzaEntry.self, Achievement.self], inMemory: true)
+        .environment(StoreManager())
 }

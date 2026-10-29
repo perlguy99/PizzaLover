@@ -47,6 +47,13 @@ struct MyRankingsView: View {
         }
         .navigationTitle("My Rankings")
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                NavigationLink {
+                    SettingsView()
+                } label: {
+                    Label("Settings", systemImage: "gearshape")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Picker("Sort By", selection: $sort) {
                     ForEach(RankingSort.allCases) { option in

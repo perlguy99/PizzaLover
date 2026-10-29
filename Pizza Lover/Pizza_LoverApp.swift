@@ -11,6 +11,7 @@ import SwiftData
 @main
 struct Pizza_LoverApp: App {
     let modelContainer: ModelContainer
+    @State private var storeManager = StoreManager()
 
     init() {
         let schema = Schema([Restaurant.self, PizzaEntry.self, Achievement.self])
@@ -25,6 +26,7 @@ struct Pizza_LoverApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
+                .environment(storeManager)
         }
         .modelContainer(modelContainer)
     }
