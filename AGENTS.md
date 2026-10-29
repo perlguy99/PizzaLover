@@ -31,11 +31,14 @@ unlock after a free 3-entry cap.
 ```
 Pizza Lover/
 ├── Models/        Restaurant, PizzaEntry, Achievement, AchievementDefinition
-├── Services/      PlacesService (MapKit nearby search), LocationService (CoreLocation wrapper)
-├── Views/         NearbyPizzaListView, RestaurantDetailView, PizzaEntryFormView, MyRankingsView
+├── Services/      PlacesService (MapKit nearby search), LocationService (CoreLocation wrapper),
+│                  RestaurantPoolFilter (pure favorites/untried pool filter for random picker)
+├── Views/         NearbyPizzaListView, RestaurantDetailView, PizzaEntryFormView, MyRankingsView,
+│                  RandomPizzaPickerView
 ├── Pizza_LoverApp.swift   App entry point, CloudKit-backed SwiftData ModelContainer
-├── ContentView.swift      TabView with "Nearby" (NearbyPizzaListView) and "My Rankings"
-│                          (MyRankingsView) tabs, each in its own NavigationStack
+├── ContentView.swift      TabView with "Nearby" (NearbyPizzaListView), "My Rankings"
+│                          (MyRankingsView), and "Random" (RandomPizzaPickerView) tabs, each
+│                          in its own NavigationStack
 └── Assets.xcassets
 ```
 
@@ -66,7 +69,14 @@ Pizza Lover/
   "I Ate Pizza Here"; `MyRankingsView` (sorted `@Query` of all `PizzaEntry`, re-sortable by
   any of the 4 scores or date, empty state via `ContentUnavailableView`); `ContentView` is now
   a `TabView` ("Nearby" / "My Rankings") instead of a single `NavigationStack` (2026-10-28)
-- **M5 "Random Pizza Picker"** — PLANNED
+- **M5 "Random Pizza Picker"** — DONE: `RestaurantPoolFilter` (pure, testable filter —
+  favorites vs untried pool), `RandomPizzaPickerView` (mode segmented control, "Pick For Me"
+  button, `.randomElement()` pick, `ContentUnavailableView` empty states for no restaurants /
+  empty pool); deliberately a plain button for v1 with no spinning-wheel animation per
+  Brent's explicit instruction; the result display is its own small `RandomPickResultView`
+  subview (name/address, "Pick Again", and a `NavigationLink` into `RestaurantDetailView`) so
+  a future fancier "spin" presentation can swap in later without touching the filter logic;
+  `ContentView` gained a third "Random" tab (2026-10-29)
 - **M6 "Achievements"** — PLANNED
 - **M7 "Monetization"** — PLANNED
 - **M8 "Ship Readiness"** — PLANNED

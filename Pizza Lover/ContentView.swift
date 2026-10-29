@@ -24,6 +24,13 @@ struct ContentView: View {
             .tabItem {
                 Label("My Rankings", systemImage: "list.star")
             }
+
+            NavigationStack {
+                RandomPizzaPickerView()
+            }
+            .tabItem {
+                Label("Random", systemImage: "shuffle")
+            }
         }
     }
 }
