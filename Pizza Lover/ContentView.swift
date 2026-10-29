@@ -10,8 +10,20 @@ import SwiftData
 
 struct ContentView: View {
     var body: some View {
-        NavigationStack {
-            NearbyPizzaListView()
+        TabView {
+            NavigationStack {
+                NearbyPizzaListView()
+            }
+            .tabItem {
+                Label("Nearby", systemImage: "map")
+            }
+
+            NavigationStack {
+                MyRankingsView()
+            }
+            .tabItem {
+                Label("My Rankings", systemImage: "list.star")
+            }
         }
     }
 }

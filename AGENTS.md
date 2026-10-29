@@ -29,9 +29,10 @@ unlock after a free 3-entry cap.
 Pizza Lover/
 ├── Models/        Restaurant, PizzaEntry, Achievement, AchievementDefinition
 ├── Services/      PlacesService (MapKit nearby search), LocationService (CoreLocation wrapper)
-├── Views/         NearbyPizzaListView, RestaurantDetailView
+├── Views/         NearbyPizzaListView, RestaurantDetailView, PizzaEntryFormView, MyRankingsView
 ├── Pizza_LoverApp.swift   App entry point, CloudKit-backed SwiftData ModelContainer
-├── ContentView.swift      hosts NearbyPizzaListView in a NavigationStack
+├── ContentView.swift      TabView with "Nearby" (NearbyPizzaListView) and "My Rankings"
+│                          (MyRankingsView) tabs, each in its own NavigationStack
 └── Assets.xcassets
 ```
 
@@ -57,7 +58,12 @@ Pizza Lover/
   pull-to-refresh), `RestaurantDetailView` (favorite toggle, pizza-entry history, "I Ate Pizza
   Here" button that links a bare default-score `PizzaEntry`), `ContentView` now just hosts
   `NearbyPizzaListView` in a `NavigationStack` (2026-10-28)
-- **M4 "Pizza Logging & Rankings"** — PLANNED
+- **M4 "Pizza Logging & Rankings"** — DONE: `PizzaEntryFormView` (real scoring form, sheet
+  presentation, 4 independent 1-10 sliders with Overall Taste visually separated under "Your
+  Gut Feeling", optional notes `TextEditor`) replaces the old bare-insert placeholder behind
+  "I Ate Pizza Here"; `MyRankingsView` (sorted `@Query` of all `PizzaEntry`, re-sortable by
+  any of the 4 scores or date, empty state via `ContentUnavailableView`); `ContentView` is now
+  a `TabView` ("Nearby" / "My Rankings") instead of a single `NavigationStack` (2026-10-28)
 - **M5 "Random Pizza Picker"** — PLANNED
 - **M6 "Achievements"** — PLANNED
 - **M7 "Monetization"** — PLANNED

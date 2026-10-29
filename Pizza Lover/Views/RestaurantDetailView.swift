@@ -9,6 +9,7 @@ import SwiftData
 struct RestaurantDetailView: View {
     @Bindable var restaurant: Restaurant
     @Environment(\.modelContext) private var modelContext
+    @State private var isShowingPizzaEntryForm = false
 
     var body: some View {
         List {
@@ -41,24 +42,19 @@ struct RestaurantDetailView: View {
 
             Section {
                 Button("I Ate Pizza Here") {
-                    logPizza()
+                    isShowingPizzaEntryForm = true
                 }
             }
         }
         .navigationTitle(restaurant.name)
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $isShowingPizzaEntryForm) {
+            PizzaEntryFormView(restaurant: restaurant)
+        }
     }
 
     private var sortedEntries: [PizzaEntry] {
         (restaurant.pizzaEntries ?? []).sorted { $0.date > $1.date }
-    }
-
-    private func logPizza() {
-        let entry = PizzaEntry()
-        entry.restaurant = restaurant
-        modelContext.insert(entry)
-        restaurant.isTried = true
-        try? modelContext.save()
     }
 }
 
