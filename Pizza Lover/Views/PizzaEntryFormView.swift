@@ -5,6 +5,7 @@
 
 import SwiftUI
 import SwiftData
+import PhotosUI
 
 struct PizzaEntryFormView: View {
     let restaurant: Restaurant
@@ -18,9 +19,26 @@ struct PizzaEntryFormView: View {
     @State private var overallTasteScore: Double = 5
     @State private var notes: String = ""
 
+    @State private var photoData: Data?
+    @State private var isShowingPhotoSourceDialog = false
+    @State private var isShowingCamera = false
+    @State private var photosPickerItem: PhotosPickerItem?
+
+    private var isCameraAvailable: Bool {
+        UIImagePickerController.isSourceTypeAvailable(.camera)
+    }
+
     var body: some View {
         NavigationStack {
             Form {
+                Section("Photo") {
+                    PhotoPickerButton(photoData: photoData) {
+                        isShowingPhotoSourceDialog = true
+                    } onRemove: {
+                        photoData = nil
+                    }
+                }
+
                 Section("Crust, Sauce & Toppings") {
                     ScoreSlider(label: "Crust", value: $crustScore)
                     ScoreSlider(label: "Sauce", value: $sauceScore)
@@ -49,6 +67,29 @@ struct PizzaEntryFormView: View {
                     Button("Save") { save() }
                 }
             }
+            .confirmationDialog("Add Photo", isPresented: $isShowingPhotoSourceDialog, titleVisibility: .visible) {
+                if isCameraAvailable {
+                    Button("Take Photo") { isShowingCamera = true }
+                }
+                PhotosPicker("Choose from Library", selection: $photosPickerItem, matching: .images)
+            }
+            .sheet(isPresented: $isShowingCamera) {
+                CameraImagePicker { image in
+                    photoData = ImageProcessing.jpegData(from: image)
+                    isShowingCamera = false
+                }
+                .ignoresSafeArea()
+            }
+            .onChange(of: photosPickerItem) { _, newItem in
+                guard let newItem else { return }
+                Task {
+                    if let data = try? await newItem.loadTransferable(type: Data.self),
+                       let uiImage = UIImage(data: data) {
+                        photoData = ImageProcessing.jpegData(from: uiImage)
+                    }
+                    photosPickerItem = nil
+                }
+            }
         }
     }
 
@@ -60,6 +101,7 @@ struct PizzaEntryFormView: View {
         entry.overallTasteScore = Int(overallTasteScore)
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         entry.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
+        entry.photoData = photoData
         entry.restaurant = restaurant
         modelContext.insert(entry)
         restaurant.isTried = true
@@ -69,6 +111,50 @@ struct PizzaEntryFormView: View {
         AchievementEngine.evaluate(entries: allEntries, context: modelContext)
 
         dismiss()
+    }
+}
+
+private struct PhotoPickerButton: View {
+    let photoData: Data?
+    let onTap: () -> Void
+    let onRemove: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            if let photoData, let uiImage = UIImage(data: photoData) {
+                ZStack(alignment: .topTrailing) {
+                    Image(uiImage: uiImage)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(height: 160)
+                        .frame(maxWidth: .infinity)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+
+                    Button(action: onRemove) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.title2)
+                            .foregroundStyle(.white, .black.opacity(0.6))
+                            .padding(6)
+                    }
+                }
+            } else {
+                RoundedRectangle(cornerRadius: 12)
+                    .strokeBorder(style: StrokeStyle(lineWidth: 2, dash: [6]))
+                    .foregroundStyle(.secondary)
+                    .frame(height: 100)
+                    .frame(maxWidth: .infinity)
+                    .overlay {
+                        VStack(spacing: 6) {
+                            Image(systemName: "camera")
+                                .font(.title2)
+                            Text("Add Photo")
+                                .font(.subheadline)
+                        }
+                        .foregroundStyle(.secondary)
+                    }
+            }
+        }
+        .buttonStyle(.plain)
     }
 }
 

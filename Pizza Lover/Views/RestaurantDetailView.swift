@@ -62,12 +62,16 @@ private struct PizzaEntryRow: View {
     let entry: PizzaEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(entry.date.formatted(date: .abbreviated, time: .shortened))
-                .font(.subheadline)
-            Text("Crust \(entry.crustScore) · Sauce \(entry.sauceScore) · Toppings \(entry.toppingsScore) · Overall \(entry.overallTasteScore)")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+        HStack(spacing: 12) {
+            PizzaPhotoThumbnail(photoData: entry.photoData, size: 44)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(entry.date.formatted(date: .abbreviated, time: .shortened))
+                    .font(.subheadline)
+                Text("Crust \(entry.crustScore) · Sauce \(entry.sauceScore) · Toppings \(entry.toppingsScore) · Overall \(entry.overallTasteScore)")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
         }
     }
 }

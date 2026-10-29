@@ -66,14 +66,18 @@ private struct PizzaRankingRow: View {
     let entry: PizzaEntry
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(entry.restaurant?.name ?? "Unknown Restaurant")
-                .font(.headline)
-            Text(entry.date.formatted(date: .abbreviated, time: .shortened))
-                .font(.caption)
-                .foregroundStyle(.secondary)
-            Text("Crust \(entry.crustScore) · Sauce \(entry.sauceScore) · Toppings \(entry.toppingsScore) · Overall \(entry.overallTasteScore)")
-                .font(.subheadline)
+        HStack(spacing: 12) {
+            PizzaPhotoThumbnail(photoData: entry.photoData, size: 60)
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(entry.restaurant?.name ?? "Unknown Restaurant")
+                    .font(.headline)
+                Text(entry.date.formatted(date: .abbreviated, time: .shortened))
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Text("Crust \(entry.crustScore) · Sauce \(entry.sauceScore) · Toppings \(entry.toppingsScore) · Overall \(entry.overallTasteScore)")
+                    .font(.subheadline)
+            }
         }
         .padding(.vertical, 2)
     }

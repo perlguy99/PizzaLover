@@ -80,6 +80,20 @@ Pizza Lover/
   subview (name/address, "Pick Again", and a `NavigationLink` into `RestaurantDetailView`) so
   a future fancier "spin" presentation can swap in later without touching the filter logic;
   `ContentView` gained a third "Random" tab (2026-10-29)
+- **M4 addition "Pizza Photo Capture"** — DONE (2026-10-29): added on top of M4's form per
+  Brent's request, after he hands-on tested M1-M6 on his real phone. `PizzaEntryFormView` gained
+  a "Photo" section (thumbnail or dashed-border placeholder) backed by a `.confirmationDialog`
+  offering "Take Photo" (only shown if `UIImagePickerController.isSourceTypeAvailable(.camera)`
+  — false on simulator) and "Choose from Library" (`PhotosPicker`, iOS 16+); `CameraImagePicker`
+  (new `UIViewControllerRepresentable` wrapping `UIImagePickerController` with
+  `sourceType = .camera` — `PhotosPicker` alone can't do camera capture); `ImageProcessing`
+  (new `Services/` helper) downsizes the picked `UIImage` to a 1200px-longest-side cap and
+  compresses to JPEG at 0.7 quality before it's stored in `PizzaEntry.photoData`; new
+  `PizzaPhotoThumbnail` reusable view shows a small rounded thumbnail in both `MyRankingsView`
+  rows (60x60) and `RestaurantDetailView`'s pizza-entry history rows (44x44) when `photoData`
+  is non-nil; `INFOPLIST_KEY_NSCameraUsageDescription` added to both Debug/Release configs
+  (`PhotosPicker`/`PHPicker` runs out-of-process and does not require a declared
+  `NSPhotoLibraryUsageDescription`, verified — not added)
 - **M6 "Achievements"** — DONE: `AchievementEngine` (pure rule-evaluation against
   `AchievementDefinition.all`, manually checks for an existing `Achievement` by `id` before
   inserting a new one since CloudKit forbids unique constraints) maps the 4 starter
