@@ -32,13 +32,16 @@ unlock after a free 3-entry cap.
 Pizza Lover/
 ├── Models/        Restaurant, PizzaEntry, Achievement, AchievementDefinition
 ├── Services/      PlacesService (MapKit nearby search), LocationService (CoreLocation wrapper),
-│                  RestaurantPoolFilter (pure favorites/untried pool filter for random picker)
+│                  RestaurantPoolFilter (pure favorites/untried pool filter for random picker),
+│                  AchievementEngine (rule-evaluation against AchievementDefinition.all,
+│                  inserts Achievement rows the first time a rule becomes true)
 ├── Views/         NearbyPizzaListView, RestaurantDetailView, PizzaEntryFormView, MyRankingsView,
-│                  RandomPizzaPickerView
+│                  RandomPizzaPickerView, AchievementsView
 ├── Pizza_LoverApp.swift   App entry point, CloudKit-backed SwiftData ModelContainer
 ├── ContentView.swift      TabView with "Nearby" (NearbyPizzaListView), "My Rankings"
-│                          (MyRankingsView), and "Random" (RandomPizzaPickerView) tabs, each
-│                          in its own NavigationStack
+│                          (MyRankingsView), "Random" (RandomPizzaPickerView), and
+│                          "Achievements" (AchievementsView) tabs, each in its own
+│                          NavigationStack
 └── Assets.xcassets
 ```
 
@@ -77,7 +80,15 @@ Pizza Lover/
   subview (name/address, "Pick Again", and a `NavigationLink` into `RestaurantDetailView`) so
   a future fancier "spin" presentation can swap in later without touching the filter logic;
   `ContentView` gained a third "Random" tab (2026-10-29)
-- **M6 "Achievements"** — PLANNED
+- **M6 "Achievements"** — DONE: `AchievementEngine` (pure rule-evaluation against
+  `AchievementDefinition.all`, manually checks for an existing `Achievement` by `id` before
+  inserting a new one since CloudKit forbids unique constraints) maps the 4 starter
+  definitions to real logic — "first-slice" (>=1 `PizzaEntry`), "five-spots" (>=5 distinct
+  restaurant names across entries), "perfect-crust" (any entry with `crustScore == 10`),
+  "dedicated" (>=10 total entries); runs automatically right after every `PizzaEntry` save in
+  `PizzaEntryFormView`; `AchievementsView` (`LazyVGrid` of cards, one per definition, earned
+  shown colored with its earned date vs. locked shown dimmed/desaturated via a `@Query` of
+  `Achievement`); `ContentView` gained a fourth "Achievements" tab (2026-10-29)
 - **M7 "Monetization"** — PLANNED
 - **M8 "Ship Readiness"** — PLANNED
 

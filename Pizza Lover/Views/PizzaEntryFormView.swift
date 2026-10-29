@@ -64,6 +64,10 @@ struct PizzaEntryFormView: View {
         modelContext.insert(entry)
         restaurant.isTried = true
         try? modelContext.save()
+
+        let allEntries = (try? modelContext.fetch(FetchDescriptor<PizzaEntry>())) ?? []
+        AchievementEngine.evaluate(entries: allEntries, context: modelContext)
+
         dismiss()
     }
 }

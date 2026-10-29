@@ -31,6 +31,13 @@ struct ContentView: View {
             .tabItem {
                 Label("Random", systemImage: "shuffle")
             }
+
+            NavigationStack {
+                AchievementsView()
+            }
+            .tabItem {
+                Label("Achievements", systemImage: "trophy.fill")
+            }
         }
     }
 }
