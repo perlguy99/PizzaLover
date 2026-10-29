@@ -29,8 +29,9 @@ unlock after a free 3-entry cap.
 Pizza Lover/
 ├── Models/        Restaurant, PizzaEntry, Achievement, AchievementDefinition
 ├── Services/      PlacesService (MapKit nearby search), LocationService (CoreLocation wrapper)
-├── Pizza_LoverApp.swift   App entry point, local-only SwiftData ModelContainer
-├── ContentView.swift      build-verification placeholder (real UI comes later)
+├── Views/         NearbyPizzaListView, RestaurantDetailView
+├── Pizza_LoverApp.swift   App entry point, CloudKit-backed SwiftData ModelContainer
+├── ContentView.swift      hosts NearbyPizzaListView in a NavigationStack
 └── Assets.xcassets
 ```
 
@@ -52,7 +53,10 @@ Pizza Lover/
 - **M2 "CloudKit Wiring"** — DONE: iCloud+CloudKit capability added in Xcode (container
   `iCloud.net.perlguy.Pizza-Lover`), `ModelConfiguration(cloudKitDatabase: .automatic)` wired
   in, verified syncing live across Brent's iPhone and iPad on the same Apple ID (2026-10-28)
-- **M3 "Nearby Places UI"** — PLANNED
+- **M3 "Nearby Places UI"** — DONE: `NearbyPizzaListView` (MapKit search, distance-sorted list,
+  pull-to-refresh), `RestaurantDetailView` (favorite toggle, pizza-entry history, "I Ate Pizza
+  Here" button that links a bare default-score `PizzaEntry`), `ContentView` now just hosts
+  `NearbyPizzaListView` in a `NavigationStack` (2026-10-28)
 - **M4 "Pizza Logging & Rankings"** — PLANNED
 - **M5 "Random Pizza Picker"** — PLANNED
 - **M6 "Achievements"** — PLANNED
