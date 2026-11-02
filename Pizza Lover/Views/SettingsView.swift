@@ -4,6 +4,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 private struct DeveloperApp: Identifiable {
     let id = UUID()
@@ -36,6 +37,14 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section {
+                NavigationLink {
+                    AchievementsView()
+                } label: {
+                    Label("Achievements", systemImage: "trophy.fill")
+                }
+            }
+
+            Section {
                 ForEach(otherApps) { app in
                     Link(destination: app.appStoreURL) {
                         VStack(alignment: .leading, spacing: 2) {
@@ -61,4 +70,5 @@ struct SettingsView: View {
     NavigationStack {
         SettingsView()
     }
+    .modelContainer(for: [Restaurant.self, PizzaEntry.self, Achievement.self], inMemory: true)
 }

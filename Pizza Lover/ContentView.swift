@@ -33,10 +33,10 @@ struct ContentView: View {
             }
 
             NavigationStack {
-                AchievementsView()
+                SettingsView()
             }
             .tabItem {
-                Label("Achievements", systemImage: "trophy.fill")
+                Label("Settings", systemImage: "gearshape")
             }
         }
     }
