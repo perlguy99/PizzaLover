@@ -19,9 +19,9 @@ extension Restaurant {
             longitude: coordinate.longitude,
             in: context
         )
-        if restaurant.address.isEmpty {
-            restaurant.address = item.formattedAddress
-        }
+        // Always refresh the address (unlike phone below) so restaurants saved before
+        // formattedAddress's layout changed pick up the new format automatically.
+        restaurant.address = item.formattedAddress
         if restaurant.phone.isEmpty, let phoneNumber = item.phoneNumber {
             restaurant.phone = phoneNumber
         }

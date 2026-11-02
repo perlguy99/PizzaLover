@@ -177,6 +177,14 @@ private struct RandomPickResultView: View {
                         .foregroundStyle(.secondary)
                         .multilineTextAlignment(.center)
                 }
+                if !restaurant.phone.isEmpty {
+                    if let telURL = restaurant.phone.telURL {
+                        Link(restaurant.phone, destination: telURL)
+                    } else {
+                        Text(restaurant.phone)
+                            .foregroundStyle(.secondary)
+                    }
+                }
             }
             .padding()
             .frame(maxWidth: .infinity)

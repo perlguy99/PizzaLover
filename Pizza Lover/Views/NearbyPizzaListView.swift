@@ -60,12 +60,23 @@ struct NearbyPizzaListView: View {
             }
         } else {
             List(placesService.results, id: \.self) { item in
-                Button {
-                    selectPlace(item)
-                } label: {
-                    NearbyPizzaRow(mapItem: item, distanceText: distanceText(to: item), isFavorite: isFavorite(item))
+                VStack(alignment: .leading, spacing: 2) {
+                    Button {
+                        selectPlace(item)
+                    } label: {
+                        NearbyPizzaRow(mapItem: item, distanceText: distanceText(to: item), isFavorite: isFavorite(item), isTried: isTried(item))
+                    }
+                    .buttonStyle(.plain)
+
+                    // Kept as a sibling of the row's Button, not nested inside its
+                    // label — a tappable Link inside a Button's label doesn't get its
+                    // own tap recognized, the outer Button swallows it.
+                    if let phoneNumber = item.phoneNumber, let telURL = phoneNumber.telURL {
+                        Link(phoneNumber, destination: telURL)
+                            .font(.caption)
+                            .padding(.leading, 2)
+                    }
                 }
-                .buttonStyle(.plain)
                 .contextMenu {
                     Button {
                         toggleFavorite(item)
@@ -74,6 +85,15 @@ struct NearbyPizzaListView: View {
                             Label("Remove from Favorites", systemImage: "star.slash")
                         } else {
                             Label("Add to Favorites", systemImage: "star")
+                        }
+                    }
+                    Button {
+                        toggleTried(item)
+                    } label: {
+                        if isTried(item) {
+                            Label("Mark as Not Visited", systemImage: "xmark.circle")
+                        } else {
+                            Label("Mark as Visited", systemImage: "checkmark.circle")
                         }
                     }
                 }
@@ -126,9 +146,19 @@ struct NearbyPizzaListView: View {
         NearbyPizzaPoolFilter.matchingRestaurant(for: item, in: savedRestaurants)?.isFavorite == true
     }
 
+    private func isTried(_ item: MKMapItem) -> Bool {
+        NearbyPizzaPoolFilter.matchingRestaurant(for: item, in: savedRestaurants)?.isTried == true
+    }
+
     private func toggleFavorite(_ item: MKMapItem) {
         let restaurant = Restaurant.upsert(from: item, in: modelContext)
         restaurant.isFavorite.toggle()
+        try? modelContext.save()
+    }
+
+    private func toggleTried(_ item: MKMapItem) {
+        let restaurant = Restaurant.upsert(from: item, in: modelContext)
+        restaurant.isTried.toggle()
         try? modelContext.save()
     }
 }
@@ -137,6 +167,7 @@ private struct NearbyPizzaRow: View {
     let mapItem: MKMapItem
     let distanceText: String?
     let isFavorite: Bool
+    let isTried: Bool
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -153,11 +184,20 @@ private struct NearbyPizzaRow: View {
                 }
             }
 
-            if isFavorite {
+            if isFavorite || isTried {
                 Spacer()
-                Image(systemName: "star.fill")
-                    .foregroundStyle(.yellow)
-                    .accessibilityLabel("Favorite")
+                VStack(spacing: 4) {
+                    if isFavorite {
+                        Image(systemName: "star.fill")
+                            .foregroundStyle(.yellow)
+                            .accessibilityLabel("Favorite")
+                    }
+                    if isTried {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(.green)
+                            .accessibilityLabel("Visited before")
+                    }
+                }
             }
         }
         .padding(.vertical, 4)
@@ -165,13 +205,37 @@ private struct NearbyPizzaRow: View {
 }
 
 extension MKMapItem {
+    /// Built from the placemark's structured components (never `.title`, which is a
+    /// single locale-formatted line that always ends in ", United States") so we get
+    /// a real two-line mailing-address layout with no country line — we only ever
+    /// show US places, so it'd just be noise.
     var formattedAddress: String {
-        if let title = placemark.title, !title.isEmpty {
-            return title
-        }
-        let components = [placemark.thoroughfare, placemark.locality, placemark.administrativeArea]
+        let placemark = self.placemark
+        let streetLine = [placemark.subThoroughfare, placemark.thoroughfare]
             .compactMap { $0 }
-        return components.isEmpty ? "Address unavailable" : components.joined(separator: ", ")
+            .joined(separator: " ")
+
+        let cityState = [placemark.locality, placemark.administrativeArea]
+            .compactMap { $0 }
+            .joined(separator: ", ")
+        let cityStateZip = [cityState, placemark.postalCode]
+            .compactMap { $0 }
+            .filter { !$0.isEmpty }
+            .joined(separator: " ")
+
+        let lines = [streetLine, cityStateZip].filter { !$0.isEmpty }
+        return lines.isEmpty ? "Address unavailable" : lines.joined(separator: "\n")
+    }
+}
+
+extension String {
+    /// A `tel:` link for this phone number string, or nil if it has no digits to call.
+    /// Strips formatting (spaces, dashes, parens) but keeps a leading "+" for
+    /// international numbers, since `tel:` URLs don't need human-readable punctuation.
+    var telURL: URL? {
+        let digitsAndPlus = filter { $0.isNumber || $0 == "+" }
+        guard !digitsAndPlus.isEmpty else { return nil }
+        return URL(string: "tel:\(digitsAndPlus)")
     }
 }
 

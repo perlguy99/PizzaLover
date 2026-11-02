@@ -22,8 +22,12 @@ struct RestaurantDetailView: View {
                             .foregroundStyle(.secondary)
                     }
                     if !restaurant.phone.isEmpty {
-                        Text(restaurant.phone)
-                            .foregroundStyle(.secondary)
+                        if let telURL = restaurant.phone.telURL {
+                            Link(restaurant.phone, destination: telURL)
+                        } else {
+                            Text(restaurant.phone)
+                                .foregroundStyle(.secondary)
+                        }
                     }
                 }
                 Toggle("Favorite", isOn: $restaurant.isFavorite)
@@ -35,7 +39,11 @@ struct RestaurantDetailView: View {
                         .foregroundStyle(.secondary)
                 } else {
                     ForEach(sortedEntries) { entry in
-                        PizzaEntryRow(entry: entry)
+                        NavigationLink {
+                            PizzaEntryDetailView(entry: entry)
+                        } label: {
+                            PizzaEntryRow(entry: entry)
+                        }
                     }
                 }
             }
@@ -45,7 +53,10 @@ struct RestaurantDetailView: View {
                     isShowingPizzaEntryForm = true
                 } label: {
                     Text("I Ate Pizza Here")
+                        .font(.headline)
+                        .frame(maxWidth: .infinity)
                 }
+                .buttonStyle(.borderedProminent)
             }
         }
         .navigationTitle(restaurant.name)
