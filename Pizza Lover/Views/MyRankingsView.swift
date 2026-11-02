@@ -41,7 +41,11 @@ struct MyRankingsView: View {
                 }
             } else {
                 List(sortedEntries) { entry in
-                    PizzaRankingRow(entry: entry)
+                    NavigationLink {
+                        PizzaEntryDetailView(entry: entry)
+                    } label: {
+                        PizzaRankingRow(entry: entry)
+                    }
                 }
             }
         }
