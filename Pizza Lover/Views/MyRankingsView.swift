@@ -27,6 +27,7 @@ private enum RankingSort: String, CaseIterable, Identifiable {
 }
 
 struct MyRankingsView: View {
+    @Environment(\.modelContext) private var modelContext
     @State private var sort: RankingSort = .overallTaste
     @Query(sort: [SortDescriptor(\PizzaEntry.overallTasteScore, order: .reverse)])
     private var entries: [PizzaEntry]
@@ -40,12 +41,15 @@ struct MyRankingsView: View {
                     Text("Log a pizza from a restaurant's detail screen to see it ranked here.")
                 }
             } else {
-                List(sortedEntries) { entry in
-                    NavigationLink {
-                        PizzaEntryDetailView(entry: entry)
-                    } label: {
-                        PizzaRankingRow(entry: entry)
+                List {
+                    ForEach(sortedEntries) { entry in
+                        NavigationLink {
+                            PizzaEntryDetailView(entry: entry)
+                        } label: {
+                            PizzaRankingRow(entry: entry)
+                        }
                     }
+                    .onDelete(perform: deleteEntries)
                 }
             }
         }
@@ -63,6 +67,13 @@ struct MyRankingsView: View {
 
     private var sortedEntries: [PizzaEntry] {
         entries.sorted(using: sort.sortDescriptor)
+    }
+
+    private func deleteEntries(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(sortedEntries[index])
+        }
+        try? modelContext.save()
     }
 }
 

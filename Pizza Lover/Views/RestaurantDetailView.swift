@@ -45,6 +45,7 @@ struct RestaurantDetailView: View {
                             PizzaEntryRow(entry: entry)
                         }
                     }
+                    .onDelete(perform: deleteEntries)
                 }
             }
 
@@ -68,6 +69,13 @@ struct RestaurantDetailView: View {
 
     private var sortedEntries: [PizzaEntry] {
         (restaurant.pizzaEntries ?? []).sorted { $0.date > $1.date }
+    }
+
+    private func deleteEntries(at offsets: IndexSet) {
+        for index in offsets {
+            modelContext.delete(sortedEntries[index])
+        }
+        try? modelContext.save()
     }
 }
 

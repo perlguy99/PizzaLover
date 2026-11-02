@@ -27,6 +27,7 @@ struct PizzaEntryFormView: View {
     @State private var isShowingCamera = false
     @State private var isShowingPhotoLibraryPicker = false
     @State private var photosPickerItem: PhotosPickerItem?
+    @State private var isShowingDeleteConfirmation = false
 
     private var isCameraAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
@@ -89,6 +90,15 @@ struct PizzaEntryFormView: View {
                     TextEditor(text: $notes)
                         .frame(minHeight: 100)
                 }
+
+                if existingEntry != nil {
+                    Section {
+                        Button("Delete Pizza Entry", role: .destructive) {
+                            isShowingDeleteConfirmation = true
+                        }
+                        .frame(maxWidth: .infinity)
+                    }
+                }
             }
             .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
@@ -114,6 +124,11 @@ struct PizzaEntryFormView: View {
                 .ignoresSafeArea()
             }
             .photosPicker(isPresented: $isShowingPhotoLibraryPicker, selection: $photosPickerItem, matching: .images)
+            .confirmationDialog("Delete this pizza entry? This can't be undone.", isPresented: $isShowingDeleteConfirmation, titleVisibility: .visible) {
+                Button("Delete Pizza Entry", role: .destructive) {
+                    deleteExistingEntry()
+                }
+            }
             .onChange(of: photosPickerItem) { _, newItem in
                 guard let newItem else { return }
                 Task {
@@ -147,6 +162,13 @@ struct PizzaEntryFormView: View {
         let allEntries = (try? modelContext.fetch(FetchDescriptor<PizzaEntry>())) ?? []
         AchievementEngine.evaluate(entries: allEntries, context: modelContext)
 
+        dismiss()
+    }
+
+    private func deleteExistingEntry() {
+        guard let existingEntry else { return }
+        modelContext.delete(existingEntry)
+        try? modelContext.save()
         dismiss()
     }
 }
