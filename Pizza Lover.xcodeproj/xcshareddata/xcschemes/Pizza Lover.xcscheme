@@ -75,9 +75,6 @@
             ReferencedContainer = "container:Pizza Lover.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
-      <StoreKitConfigurationFileReference
-         identifier = "../../Pizza Lover/Views/Pizza Lover.storekit">
-      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Release"

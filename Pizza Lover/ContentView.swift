@@ -45,5 +45,4 @@ struct ContentView: View {
 #Preview {
     ContentView()
         .modelContainer(for: [Restaurant.self, PizzaEntry.self, Achievement.self], inMemory: true)
-        .environment(StoreManager())
 }

@@ -6,12 +6,12 @@ restaurant, scored on 4 independent 1-10 values: crust, sauce, toppings, and ove
 Overall taste is a separate manual gut-feel score — it is NEVER computed/averaged from the
 other three. Nearby pizza-place search uses Apple's free, built-in MapKit (Yelp's Fusion API
 killed its free tier, now $229+/month minimum, so Yelp is not used). A random pizza picker, an
-achievements system, full iCloud/CloudKit sync, and a $0.99 one-time unlock after a free
-3-entry cap are all built. Remaining future milestone: ship readiness (App Store Connect).
+achievements system, and full iCloud/CloudKit sync are all built. The app is fully free with
+no paywall. Remaining future milestone: ship readiness (App Store Connect).
 
 ## Core Principles
 1. **No ads. Ever.** No ad SDKs in the bundle.
-2. **Pay once, own it.** One non-consumable IAP ($0.99), no subscriptions.
+2. **Free, no paywall.** The app is fully free and unlimited — no IAP, no subscriptions.
 3. **Overall taste score is independent.** Never derive it from crust/sauce/toppings — it is
    always a separate manual entry.
 4. **No login screen.** CloudKit will ride the user's Apple ID automatically once wired up;
@@ -21,7 +21,6 @@ achievements system, full iCloud/CloudKit sync, and a $0.99 one-time unlock afte
 
 ## Tech Stack
 - SwiftUI + SwiftData + MapKit + CoreLocation
-- StoreKit 2 (wired up in M7 — one non-consumable unlock, `StoreManager`, no ads/subscriptions)
 - Deployment target iOS 17.6 (built/indexed with the iOS 27 SDK in Xcode — don't assume
   iOS 18+-only APIs are available; the `Tab(_:systemImage:content:)` TabView initializer
   isn't, use classic `TabView` + `.tabItem` instead, confirmed 2026-10-28), iPhone only
@@ -36,24 +35,16 @@ Pizza Lover/
 ├── Services/      PlacesService (MapKit nearby search), LocationService (CoreLocation wrapper),
 │                  RestaurantPoolFilter (pure favorites/untried pool filter for random picker),
 │                  AchievementEngine (rule-evaluation against AchievementDefinition.all,
-│                  inserts Achievement rows the first time a rule becomes true),
-│                  StoreManager (StoreKit 2, @MainActor @Observable, one-time $0.99 unlock,
-│                  mirrors MindlessJigsaw's house pattern), PizzaEntryGate (pure, testable
-│                  free-tier-of-3 cap check)
+│                  inserts Achievement rows the first time a rule becomes true)
 ├── Views/         NearbyPizzaListView, RestaurantDetailView, PizzaEntryFormView, MyRankingsView,
-│                  RandomPizzaPickerView, AchievementsView, PaywallView (shown when the free-tier
-│                  gate blocks a save), SettingsView (Restore Purchases + #if DEBUG unlock
-│                  toggle, reachable via a gear button on My Rankings), Pizza Lover.storekit
-│                  (local StoreKit test config, wired into the Xcode scheme's Launch Action)
-├── Pizza_LoverApp.swift   App entry point, CloudKit-backed SwiftData ModelContainer,
-│                          StoreManager held as @State and injected via .environment(storeManager)
+│                  RandomPizzaPickerView, AchievementsView, SettingsView (placeholder "More Apps"
+│                  cross-promo section, reachable via a gear button on My Rankings)
+├── Pizza_LoverApp.swift   App entry point, CloudKit-backed SwiftData ModelContainer
 ├── ContentView.swift      TabView with "Nearby" (NearbyPizzaListView), "My Rankings"
 │                          (MyRankingsView), "Random" (RandomPizzaPickerView), and
 │                          "Achievements" (AchievementsView) tabs, each in its own
 │                          NavigationStack
 └── Assets.xcassets
-
-Pizza LoverTests/  PizzaEntryGateTests.swift (Swift Testing coverage for the free-tier gate)
 ```
 
 ## Key Conventions
@@ -121,29 +112,16 @@ Pizza LoverTests/  PizzaEntryGateTests.swift (Swift Testing coverage for the fre
   `PizzaEntryFormView`; `AchievementsView` (`LazyVGrid` of cards, one per definition, earned
   shown colored with its earned date vs. locked shown dimmed/desaturated via a `@Query` of
   `Achievement`); `ContentView` gained a fourth "Achievements" tab (2026-10-29)
-- **M7 "Monetization"** — DONE: `StoreManager` (StoreKit 2, `@MainActor @Observable`, mirrors
-  MindlessJigsaw's `StoreManager` pattern closely — `Transaction.updates` listener started in
-  `init()`, product load, `#if DEBUG var debugUnlockOverride`, published
-  `product`/`isReady`/`isPurchasing`/`isRestoring`/`purchaseError`) manages the single
-  non-consumable `com.perlguy.pizzalover.unlimited` ($0.99, no ads/subscriptions ever, per
-  Core Principle 2); `Pizza Lover.storekit` local test config added and wired into the
-  shared Xcode scheme's Launch Action (`StoreKitConfigurationFileReference`, a shared
-  `Pizza Lover.xcscheme` didn't exist yet so one was created following MindlessJigsaw's as a
-  template); `PizzaEntryGate` (pure, testable — `canSaveNewEntry(currentCount:isUnlocked:)`
-  against `freeTierCap = 3`) is the actual gate, enforced in `PizzaEntryFormView.save()` via a
-  live `modelContext.fetchCount(FetchDescriptor<PizzaEntry>())` re-fetched at save time (not a
-  stale count from when the screen rendered, since CloudKit sync from another device could
-  change it in between) — presents `PaywallView` as a sheet instead of saving when blocked;
-  `RestaurantDetailView`'s "I Ate Pizza Here" button gets an earlier, non-authoritative visual
-  cue (lock icon + caption) once at the cap and unlocked, but the live check in the form is
-  the real gate; `PaywallView` shows live StoreKit price, feature list ("Unlimited pizza
-  entries," "No ads, ever," "One-time purchase, yours forever"), purchase/restore buttons,
-  loading/error states; `SettingsView` (new, minimal — Restore Purchases + `#if DEBUG` unlock
-  toggle) added behind a gear button on `MyRankingsView`'s toolbar, since the app has no
-  Settings tab; `StoreManager` injected app-wide from `Pizza_LoverApp.swift` via `@State` +
-  `.environment(storeManager)`; `PizzaEntryGateTests.swift` added with Swift Testing coverage
-  of the cap boundary (unlocked bypass, below/at/above cap); build and test both verified
-  clean on iPhone 17 simulator (2026-10-29)
+- **M7 "Monetization"** — BUILT then REMOVED: a $0.99 one-time StoreKit unlock gating saves
+  past a free 3-entry cap was built in M7 (2026-10-29) — `StoreManager`, `PizzaEntryGate`,
+  `PaywallView`, `Pizza Lover.storekit`, a Restore Purchases + `#if DEBUG` unlock toggle in
+  `SettingsView`, and `PizzaEntryGateTests.swift`. On 2026-11-02 Brent decided to make the app
+  fully free with no paywall — the entire paywall stack was ripped out (all files above
+  deleted; `Pizza_LoverApp.swift`, `PizzaEntryFormView.swift`, `RestaurantDetailView.swift`,
+  `ContentView.swift`, and the shared `.xcscheme` had their StoreManager/PaywallView
+  references removed). `SettingsView` was kept as a placeholder for a future "Support the
+  developer / check out my other apps" cross-promo section (real links still pending from
+  Brent).
 - **M8 "Ship Readiness"** — PLANNED
 
 ## Do NOT
