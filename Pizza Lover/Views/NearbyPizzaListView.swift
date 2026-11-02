@@ -10,6 +10,7 @@ import CoreLocation
 
 struct NearbyPizzaListView: View {
     @Environment(\.modelContext) private var modelContext
+    @Query private var savedRestaurants: [Restaurant]
     @State private var locationService = LocationService()
     @State private var placesService = PlacesService()
     @State private var selectedRestaurant: Restaurant?
@@ -62,9 +63,20 @@ struct NearbyPizzaListView: View {
                 Button {
                     selectPlace(item)
                 } label: {
-                    NearbyPizzaRow(mapItem: item, distanceText: distanceText(to: item))
+                    NearbyPizzaRow(mapItem: item, distanceText: distanceText(to: item), isFavorite: isFavorite(item))
                 }
                 .buttonStyle(.plain)
+                .contextMenu {
+                    Button {
+                        toggleFavorite(item)
+                    } label: {
+                        if isFavorite(item) {
+                            Label("Remove from Favorites", systemImage: "star.slash")
+                        } else {
+                            Label("Add to Favorites", systemImage: "star")
+                        }
+                    }
+                }
             }
             .refreshable { await refreshAsync() }
         }
@@ -105,39 +117,47 @@ struct NearbyPizzaListView: View {
     }
 
     private func selectPlace(_ item: MKMapItem) {
-        let coordinate = item.placemark.coordinate
-        let restaurant = Restaurant.findOrCreate(
-            name: item.name ?? "Unknown Pizza Place",
-            latitude: coordinate.latitude,
-            longitude: coordinate.longitude,
-            in: modelContext
-        )
-        if restaurant.address.isEmpty {
-            restaurant.address = item.formattedAddress
-        }
-        if restaurant.phone.isEmpty, let phoneNumber = item.phoneNumber {
-            restaurant.phone = phoneNumber
-        }
+        let restaurant = Restaurant.upsert(from: item, in: modelContext)
         try? modelContext.save()
         selectedRestaurant = restaurant
+    }
+
+    private func isFavorite(_ item: MKMapItem) -> Bool {
+        NearbyPizzaPoolFilter.matchingRestaurant(for: item, in: savedRestaurants)?.isFavorite == true
+    }
+
+    private func toggleFavorite(_ item: MKMapItem) {
+        let restaurant = Restaurant.upsert(from: item, in: modelContext)
+        restaurant.isFavorite.toggle()
+        try? modelContext.save()
     }
 }
 
 private struct NearbyPizzaRow: View {
     let mapItem: MKMapItem
     let distanceText: String?
+    let isFavorite: Bool
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(mapItem.name ?? "Unknown Pizza Place")
-                .font(.headline)
-            Text(mapItem.formattedAddress)
-                .font(.subheadline)
-                .foregroundStyle(.secondary)
-            if let distanceText {
-                Text(distanceText)
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+        HStack(alignment: .firstTextBaseline) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(mapItem.name ?? "Unknown Pizza Place")
+                    .font(.headline)
+                Text(mapItem.formattedAddress)
+                    .font(.subheadline)
+                    .foregroundStyle(.secondary)
+                if let distanceText {
+                    Text(distanceText)
+                        .font(.caption)
+                        .foregroundStyle(.tertiary)
+                }
+            }
+
+            if isFavorite {
+                Spacer()
+                Image(systemName: "star.fill")
+                    .foregroundStyle(.yellow)
+                    .accessibilityLabel("Favorite")
             }
         }
         .padding(.vertical, 4)
