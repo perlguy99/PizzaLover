@@ -20,6 +20,7 @@ enum NearbyPizzaPoolFilter {
     static func pool(from items: [MKMapItem], mode: RandomPizzaMode, savedRestaurants: [Restaurant]) -> [MKMapItem] {
         items.filter { item in
             let existing = matchingRestaurant(for: item, in: savedRestaurants)
+            if existing?.isExcluded == true { return false }
             switch mode {
             case .favorites:
                 return existing?.isFavorite == true

@@ -16,6 +16,7 @@ final class Restaurant {
     var phone: String = ""
     var isFavorite: Bool = false
     var isTried: Bool = false
+    var isExcluded: Bool = false   // never appears in Random Pizza picks, regardless of mode
     var dateAdded: Date = Date()
 
     @Relationship(deleteRule: .cascade, inverse: \PizzaEntry.restaurant)

@@ -15,13 +15,14 @@ struct NearbyPizzaPoolFilterTests {
         return item
     }
 
-    private func restaurant(name: String, latitude: Double, longitude: Double, isFavorite: Bool = false, isTried: Bool = false) -> Restaurant {
+    private func restaurant(name: String, latitude: Double, longitude: Double, isFavorite: Bool = false, isTried: Bool = false, isExcluded: Bool = false) -> Restaurant {
         let restaurant = Restaurant()
         restaurant.name = name
         restaurant.latitude = latitude
         restaurant.longitude = longitude
         restaurant.isFavorite = isFavorite
         restaurant.isTried = isTried
+        restaurant.isExcluded = isExcluded
         return restaurant
     }
 
@@ -59,5 +60,22 @@ struct NearbyPizzaPoolFilterTests {
         let pool = NearbyPizzaPoolFilter.pool(from: [neverSeen], mode: .favorites, savedRestaurants: [])
 
         #expect(pool.isEmpty)
+    }
+
+    @Test func excludedRestaurantNeverAppearsEvenIfItMatchesTheMode() {
+        let excludedFavorite = mapItem(name: "Banned Pie", latitude: 1, longitude: 1)
+        let keptFavorite = mapItem(name: "Kept Pie", latitude: 2, longitude: 2)
+        let excludedNeverTried = mapItem(name: "Banned New Pie", latitude: 3, longitude: 3)
+        let saved = [
+            restaurant(name: "Banned Pie", latitude: 1, longitude: 1, isFavorite: true, isExcluded: true),
+            restaurant(name: "Kept Pie", latitude: 2, longitude: 2, isFavorite: true),
+            restaurant(name: "Banned New Pie", latitude: 3, longitude: 3, isExcluded: true),
+        ]
+
+        let favoritesPool = NearbyPizzaPoolFilter.pool(from: [excludedFavorite, keptFavorite], mode: .favorites, savedRestaurants: saved)
+        #expect(favoritesPool.map(\.name) == [keptFavorite.name])
+
+        let untriedPool = NearbyPizzaPoolFilter.pool(from: [excludedNeverTried], mode: .untried, savedRestaurants: saved)
+        #expect(untriedPool.isEmpty)
     }
 }

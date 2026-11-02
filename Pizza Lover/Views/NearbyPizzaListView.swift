@@ -64,7 +64,7 @@ struct NearbyPizzaListView: View {
                     Button {
                         selectPlace(item)
                     } label: {
-                        NearbyPizzaRow(mapItem: item, distanceText: distanceText(to: item), isFavorite: isFavorite(item), isTried: isTried(item))
+                        NearbyPizzaRow(mapItem: item, distanceText: distanceText(to: item), isFavorite: isFavorite(item), isTried: isTried(item), isExcluded: isExcluded(item))
                     }
                     .buttonStyle(.plain)
 
@@ -94,6 +94,15 @@ struct NearbyPizzaListView: View {
                             Label("Mark as Not Visited", systemImage: "xmark.circle")
                         } else {
                             Label("Mark as Visited", systemImage: "checkmark.circle")
+                        }
+                    }
+                    Button(role: isExcluded(item) ? nil : .destructive) {
+                        toggleExcluded(item)
+                    } label: {
+                        if isExcluded(item) {
+                            Label("Include in Random Picks", systemImage: "nosign")
+                        } else {
+                            Label("Exclude from Random Picks", systemImage: "nosign")
                         }
                     }
                 }
@@ -150,6 +159,10 @@ struct NearbyPizzaListView: View {
         NearbyPizzaPoolFilter.matchingRestaurant(for: item, in: savedRestaurants)?.isTried == true
     }
 
+    private func isExcluded(_ item: MKMapItem) -> Bool {
+        NearbyPizzaPoolFilter.matchingRestaurant(for: item, in: savedRestaurants)?.isExcluded == true
+    }
+
     private func toggleFavorite(_ item: MKMapItem) {
         let restaurant = Restaurant.upsert(from: item, in: modelContext)
         restaurant.isFavorite.toggle()
@@ -161,6 +174,12 @@ struct NearbyPizzaListView: View {
         restaurant.isTried.toggle()
         try? modelContext.save()
     }
+
+    private func toggleExcluded(_ item: MKMapItem) {
+        let restaurant = Restaurant.upsert(from: item, in: modelContext)
+        restaurant.isExcluded.toggle()
+        try? modelContext.save()
+    }
 }
 
 private struct NearbyPizzaRow: View {
@@ -168,6 +187,7 @@ private struct NearbyPizzaRow: View {
     let distanceText: String?
     let isFavorite: Bool
     let isTried: Bool
+    let isExcluded: Bool
 
     var body: some View {
         HStack(alignment: .firstTextBaseline) {
@@ -184,7 +204,7 @@ private struct NearbyPizzaRow: View {
                 }
             }
 
-            if isFavorite || isTried {
+            if isFavorite || isTried || isExcluded {
                 Spacer()
                 VStack(spacing: 4) {
                     if isFavorite {
@@ -196,6 +216,11 @@ private struct NearbyPizzaRow: View {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundStyle(.green)
                             .accessibilityLabel("Visited before")
+                    }
+                    if isExcluded {
+                        Image(systemName: "nosign")
+                            .foregroundStyle(.red)
+                            .accessibilityLabel("Excluded from random picks")
                     }
                 }
             }
