@@ -8,24 +8,57 @@ import SwiftData
 import PhotosUI
 
 struct PizzaEntryFormView: View {
-    let restaurant: Restaurant
+    /// Set when logging a brand-new pizza; nil when editing an existing one.
+    let restaurant: Restaurant?
+    /// Set when editing an existing pizza; nil when logging a new one.
+    let existingEntry: PizzaEntry?
 
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
 
-    @State private var crustScore: Double = 5
-    @State private var sauceScore: Double = 5
-    @State private var toppingsScore: Double = 5
-    @State private var overallTasteScore: Double = 5
-    @State private var notes: String = ""
+    @State private var crustScore: Double
+    @State private var sauceScore: Double
+    @State private var toppingsScore: Double
+    @State private var overallTasteScore: Double
+    @State private var notes: String
 
     @State private var photoData: Data?
     @State private var isShowingPhotoSourceDialog = false
     @State private var isShowingCamera = false
+    @State private var isShowingPhotoLibraryPicker = false
     @State private var photosPickerItem: PhotosPickerItem?
 
     private var isCameraAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
+    }
+
+    private var navigationTitle: String {
+        if existingEntry != nil {
+            return "Edit Pizza"
+        }
+        return restaurant?.name ?? ""
+    }
+
+    init(restaurant: Restaurant) {
+        self.restaurant = restaurant
+        self.existingEntry = nil
+        _crustScore = State(initialValue: 5)
+        _sauceScore = State(initialValue: 5)
+        _toppingsScore = State(initialValue: 5)
+        _overallTasteScore = State(initialValue: 5)
+        _notes = State(initialValue: "")
+        _photoData = State(initialValue: nil)
+    }
+
+    init(existingEntry: PizzaEntry) {
+        self.restaurant = nil
+        self.existingEntry = existingEntry
+        _crustScore = State(initialValue: Double(existingEntry.crustScore))
+        _sauceScore = State(initialValue: Double(existingEntry.sauceScore))
+        _toppingsScore = State(initialValue: Double(existingEntry.toppingsScore))
+        _overallTasteScore = State(initialValue: Double(existingEntry.overallTasteScore))
+        _notes = State(initialValue: existingEntry.notes ?? "")
+        _photoData = State(initialValue: existingEntry.photoData)
     }
 
     var body: some View {
@@ -57,7 +90,7 @@ struct PizzaEntryFormView: View {
                         .frame(minHeight: 100)
                 }
             }
-            .navigationTitle(restaurant.name)
+            .navigationTitle(navigationTitle)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
@@ -71,7 +104,7 @@ struct PizzaEntryFormView: View {
                 if isCameraAvailable {
                     Button("Take Photo") { isShowingCamera = true }
                 }
-                PhotosPicker("Choose from Library", selection: $photosPickerItem, matching: .images)
+                Button("Choose from Library") { isShowingPhotoLibraryPicker = true }
             }
             .sheet(isPresented: $isShowingCamera) {
                 CameraImagePicker { image in
@@ -80,6 +113,7 @@ struct PizzaEntryFormView: View {
                 }
                 .ignoresSafeArea()
             }
+            .photosPicker(isPresented: $isShowingPhotoLibraryPicker, selection: $photosPickerItem, matching: .images)
             .onChange(of: photosPickerItem) { _, newItem in
                 guard let newItem else { return }
                 Task {
@@ -94,7 +128,7 @@ struct PizzaEntryFormView: View {
     }
 
     private func save() {
-        let entry = PizzaEntry()
+        let entry = existingEntry ?? PizzaEntry()
         entry.crustScore = Int(crustScore)
         entry.sauceScore = Int(sauceScore)
         entry.toppingsScore = Int(toppingsScore)
@@ -102,9 +136,12 @@ struct PizzaEntryFormView: View {
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         entry.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
         entry.photoData = photoData
-        entry.restaurant = restaurant
-        modelContext.insert(entry)
-        restaurant.isTried = true
+
+        if existingEntry == nil, let restaurant {
+            entry.restaurant = restaurant
+            modelContext.insert(entry)
+            restaurant.isTried = true
+        }
         try? modelContext.save()
 
         let allEntries = (try? modelContext.fetch(FetchDescriptor<PizzaEntry>())) ?? []

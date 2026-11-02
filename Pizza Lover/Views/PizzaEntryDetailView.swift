@@ -11,6 +11,8 @@ import SwiftUI
 struct PizzaEntryDetailView: View {
     let entry: PizzaEntry
 
+    @State private var isShowingEditSheet = false
+
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -61,6 +63,14 @@ struct PizzaEntryDetailView: View {
         }
         .navigationTitle("Pizza Details")
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .topBarTrailing) {
+                Button("Edit") { isShowingEditSheet = true }
+            }
+        }
+        .sheet(isPresented: $isShowingEditSheet) {
+            PizzaEntryFormView(existingEntry: entry)
+        }
     }
 }
 
