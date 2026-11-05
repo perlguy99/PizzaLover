@@ -125,12 +125,16 @@ struct PizzaEntryFormView: View {
                 ImagePicker(sourceType: .camera) { image in
                     photoData = ImageProcessing.jpegData(from: image)
                     isShowingCamera = false
+                } onCancel: {
+                    isShowingCamera = false
                 }
                 .ignoresSafeArea()
             }
             .sheet(isPresented: $isShowingLibraryPicker) {
                 ImagePicker(sourceType: .photoLibrary) { image in
                     photoData = ImageProcessing.jpegData(from: image)
+                    isShowingLibraryPicker = false
+                } onCancel: {
                     isShowingLibraryPicker = false
                 }
                 .ignoresSafeArea()
