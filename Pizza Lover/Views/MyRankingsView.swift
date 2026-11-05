@@ -61,7 +61,8 @@ struct MyRankingsView: View {
                 Button {
                     isShowingAddFrozen = true
                 } label: {
-                    Image(systemName: "plus")
+                    Image(systemName: "snowflake")
+                        .foregroundStyle(Color(red: 0.75, green: 0.9, blue: 1.0))
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
