@@ -28,6 +28,10 @@ struct PizzaEntryFormView: View {
     @State private var isShowingPhotoLibraryPicker = false
     @State private var photosPickerItem: PhotosPickerItem?
     @State private var isShowingDeleteConfirmation = false
+    /// Set by Cancel/Save/Delete right before they dismiss, so onDisappear
+    /// can tell "the user chose to leave" apart from an interactive swipe-down
+    /// - only the latter should fall back to an implicit save.
+    @State private var didDismissExplicitly = false
 
     private var isCameraAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
@@ -104,7 +108,10 @@ struct PizzaEntryFormView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
+                    Button("Cancel") {
+                        didDismissExplicitly = true
+                        dismiss()
+                    }
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") { save() }
@@ -139,10 +146,27 @@ struct PizzaEntryFormView: View {
                     photosPickerItem = nil
                 }
             }
+            // Swiping the sheet away (instead of tapping Save) used to silently
+            // discard whatever had been entered, including an already-attached
+            // photo - Brent lost a logged pizza this way. Cancel/Delete still
+            // discard on purpose (that's their whole point, see
+            // didDismissExplicitly below); any other way this view disappears
+            // now persists what's there instead of throwing it away.
+            .onDisappear {
+                if !didDismissExplicitly {
+                    persistEntry()
+                }
+            }
         }
     }
 
     private func save() {
+        persistEntry()
+        didDismissExplicitly = true
+        dismiss()
+    }
+
+    private func persistEntry() {
         let entry = existingEntry ?? PizzaEntry()
         entry.crustScore = Int(crustScore)
         entry.sauceScore = Int(sauceScore)
@@ -161,12 +185,11 @@ struct PizzaEntryFormView: View {
 
         let allEntries = (try? modelContext.fetch(FetchDescriptor<PizzaEntry>())) ?? []
         AchievementEngine.evaluate(entries: allEntries, context: modelContext)
-
-        dismiss()
     }
 
     private func deleteExistingEntry() {
         guard let existingEntry else { return }
+        didDismissExplicitly = true
         modelContext.delete(existingEntry)
         try? modelContext.save()
         dismiss()
