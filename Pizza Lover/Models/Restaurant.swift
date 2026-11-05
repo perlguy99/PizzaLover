@@ -18,6 +18,7 @@ final class Restaurant {
     var isTried: Bool = false
     var isExcluded: Bool = false   // never appears in Random Pizza picks, regardless of mode
     var dateAdded: Date = Date()
+    var isFrozen: Bool = false   // a store-bought frozen pizza logged from home, not a real place - no address/coordinates
 
     @Relationship(deleteRule: .cascade, inverse: \PizzaEntry.restaurant)
     var pizzaEntries: [PizzaEntry]? = []
@@ -33,6 +34,22 @@ final class Restaurant {
         fresh.name = name
         fresh.latitude = latitude
         fresh.longitude = longitude
+        context.insert(fresh)
+        return fresh
+    }
+
+    /// Same dedupe idea as findOrCreate, but for frozen pizzas: no coordinates to key
+    /// off of, so match on name alone (so logging "DiGiorno Pepperoni" a second time
+    /// adds another entry to the same brand instead of fragmenting it into a duplicate).
+    static func findOrCreateFrozen(name: String, in context: ModelContext) -> Restaurant {
+        let predicate = #Predicate<Restaurant> { $0.isFrozen == true && $0.name == name }
+        if let existing = try? context.fetch(FetchDescriptor(predicate: predicate)).first {
+            return existing
+        }
+        let fresh = Restaurant()
+        fresh.name = name
+        fresh.isFrozen = true
+        fresh.isTried = true
         context.insert(fresh)
         return fresh
     }

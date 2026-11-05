@@ -29,6 +29,8 @@ private enum RankingSort: String, CaseIterable, Identifiable {
 struct MyRankingsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var sort: RankingSort = .overallTaste
+    @State private var isShowingAddFrozen = false
+    @State private var frozenRestaurantToLog: Restaurant?
     @Query(sort: [SortDescriptor(\PizzaEntry.overallTasteScore, order: .reverse)])
     private var entries: [PizzaEntry]
 
@@ -38,7 +40,7 @@ struct MyRankingsView: View {
                 ContentUnavailableView {
                     Label("No Pizzas Logged Yet", systemImage: "fork.knife")
                 } description: {
-                    Text("Log a pizza from a restaurant's detail screen to see it ranked here.")
+                    Text("Log a pizza from a restaurant's detail screen, or add a frozen pizza from home, to see it ranked here.")
                 }
             } else {
                 List {
@@ -55,6 +57,13 @@ struct MyRankingsView: View {
         }
         .navigationTitle("My Rankings")
         .toolbar {
+            ToolbarItem(placement: .topBarLeading) {
+                Button {
+                    isShowingAddFrozen = true
+                } label: {
+                    Image(systemName: "plus")
+                }
+            }
             ToolbarItem(placement: .topBarTrailing) {
                 Picker("Sort By", selection: $sort) {
                     ForEach(RankingSort.allCases) { option in
@@ -62,6 +71,15 @@ struct MyRankingsView: View {
                     }
                 }
             }
+        }
+        .sheet(isPresented: $isShowingAddFrozen) {
+            AddFrozenPizzaView { restaurant in
+                isShowingAddFrozen = false
+                frozenRestaurantToLog = restaurant
+            }
+        }
+        .sheet(item: $frozenRestaurantToLog) { restaurant in
+            PizzaEntryFormView(restaurant: restaurant)
         }
     }
 
@@ -85,8 +103,15 @@ private struct PizzaRankingRow: View {
             PizzaPhotoThumbnail(photoData: entry.photoData, size: 60)
 
             VStack(alignment: .leading, spacing: 4) {
-                Text(entry.restaurant?.name ?? "Unknown Restaurant")
-                    .font(.headline)
+                HStack(spacing: 4) {
+                    if entry.restaurant?.isFrozen == true {
+                        Image(systemName: "snowflake")
+                            .font(.subheadline)
+                            .foregroundStyle(.blue)
+                    }
+                    Text(entry.restaurant?.name ?? "Unknown Restaurant")
+                        .font(.headline)
+                }
                 Text(entry.date.formatted(date: .abbreviated, time: .shortened))
                     .font(.caption)
                     .foregroundStyle(.secondary)
