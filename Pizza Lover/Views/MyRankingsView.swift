@@ -6,6 +6,10 @@
 import SwiftUI
 import SwiftData
 
+/// Brent's preferred icy blue for anything marking a frozen pizza (toolbar
+/// button + row badge) - keep both in sync with this one value.
+private let frozenPizzaBlue = Color(red: 0.75, green: 0.9, blue: 1.0)
+
 private enum RankingSort: String, CaseIterable, Identifiable {
     case overallTaste = "Overall"
     case crust = "Crust"
@@ -62,7 +66,7 @@ struct MyRankingsView: View {
                     isShowingAddFrozen = true
                 } label: {
                     Image(systemName: "snowflake")
-                        .foregroundStyle(Color(red: 0.75, green: 0.9, blue: 1.0))
+                        .foregroundStyle(frozenPizzaBlue)
                 }
             }
             ToolbarItem(placement: .topBarTrailing) {
@@ -104,11 +108,11 @@ private struct PizzaRankingRow: View {
             PizzaPhotoThumbnail(photoData: entry.photoData, size: 60)
 
             VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 4) {
+                HStack(alignment: .top, spacing: 4) {
                     if entry.restaurant?.isFrozen == true {
                         Image(systemName: "snowflake")
                             .font(.subheadline)
-                            .foregroundStyle(.blue)
+                            .foregroundStyle(frozenPizzaBlue)
                     }
                     Text(entry.restaurant?.name ?? "Unknown Restaurant")
                         .font(.headline)
