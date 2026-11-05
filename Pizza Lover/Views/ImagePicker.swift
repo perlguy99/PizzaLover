@@ -1,19 +1,28 @@
 //
-//  CameraImagePicker.swift
+//  ImagePicker.swift
 //  Pizza Lover
+//
+//  Renamed from CameraImagePicker.swift 2026-11-05 - now covers camera AND
+//  library, see sourceType below.
 //
 
 import SwiftUI
 import UIKit
 
-/// UIKit bridge for camera capture — `PhotosPicker` (SwiftUI-native) only supports picking
-/// from the library, not taking a new photo, so the camera path needs `UIImagePickerController`.
-struct CameraImagePicker: UIViewControllerRepresentable {
+/// UIKit bridge for photo capture/selection, parameterized by source. Used for both
+/// camera and library instead of SwiftUI-native `PhotosPicker` for the library case too:
+/// `.photosPicker` presented from inside a view that's itself already shown as a sheet
+/// has a real, reproducible bug where dismissing it after picking a photo cascades and
+/// closes the parent sheet as well (confirmed by Brent on-device). `UIImagePickerController`
+/// fully supports `.photoLibrary` as a source and, wrapped the same way the camera path
+/// already was, doesn't have that problem - it owns its own dismissal explicitly.
+struct ImagePicker: UIViewControllerRepresentable {
+    var sourceType: UIImagePickerController.SourceType
     var onImagePicked: (UIImage) -> Void
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
-        picker.sourceType = .camera
+        picker.sourceType = sourceType
         picker.delegate = context.coordinator
         return picker
     }

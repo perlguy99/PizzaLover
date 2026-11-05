@@ -5,7 +5,6 @@
 
 import SwiftUI
 import SwiftData
-import PhotosUI
 
 struct PizzaEntryFormView: View {
     /// Set when logging a brand-new pizza; nil when editing an existing one.
@@ -25,8 +24,7 @@ struct PizzaEntryFormView: View {
     @State private var photoData: Data?
     @State private var isShowingPhotoSourceDialog = false
     @State private var isShowingCamera = false
-    @State private var isShowingPhotoLibraryPicker = false
-    @State private var photosPickerItem: PhotosPickerItem?
+    @State private var isShowingLibraryPicker = false
     @State private var isShowingDeleteConfirmation = false
     /// Set by Cancel/Save/Delete right before they dismiss, so onDisappear
     /// can tell "the user chose to leave" apart from an interactive swipe-down
@@ -121,29 +119,25 @@ struct PizzaEntryFormView: View {
                 if isCameraAvailable {
                     Button("Take Photo") { isShowingCamera = true }
                 }
-                Button("Choose from Library") { isShowingPhotoLibraryPicker = true }
+                Button("Choose from Library") { isShowingLibraryPicker = true }
             }
             .sheet(isPresented: $isShowingCamera) {
-                CameraImagePicker { image in
+                ImagePicker(sourceType: .camera) { image in
                     photoData = ImageProcessing.jpegData(from: image)
                     isShowingCamera = false
                 }
                 .ignoresSafeArea()
             }
-            .photosPicker(isPresented: $isShowingPhotoLibraryPicker, selection: $photosPickerItem, matching: .images)
+            .sheet(isPresented: $isShowingLibraryPicker) {
+                ImagePicker(sourceType: .photoLibrary) { image in
+                    photoData = ImageProcessing.jpegData(from: image)
+                    isShowingLibraryPicker = false
+                }
+                .ignoresSafeArea()
+            }
             .confirmationDialog("Delete this pizza entry? This can't be undone.", isPresented: $isShowingDeleteConfirmation, titleVisibility: .visible) {
                 Button("Delete Pizza Entry", role: .destructive) {
                     deleteExistingEntry()
-                }
-            }
-            .onChange(of: photosPickerItem) { _, newItem in
-                guard let newItem else { return }
-                Task {
-                    if let data = try? await newItem.loadTransferable(type: Data.self),
-                       let uiImage = UIImage(data: data) {
-                        photoData = ImageProcessing.jpegData(from: uiImage)
-                    }
-                    photosPickerItem = nil
                 }
             }
             // Swiping the sheet away (instead of tapping Save) used to silently

@@ -93,9 +93,12 @@ Pizza Lover/
   Brent's request, after he hands-on tested M1-M6 on his real phone. `PizzaEntryFormView` gained
   a "Photo" section (thumbnail or dashed-border placeholder) backed by a `.confirmationDialog`
   offering "Take Photo" (only shown if `UIImagePickerController.isSourceTypeAvailable(.camera)`
-  — false on simulator) and "Choose from Library" (`PhotosPicker`, iOS 16+); `CameraImagePicker`
-  (new `UIViewControllerRepresentable` wrapping `UIImagePickerController` with
-  `sourceType = .camera` — `PhotosPicker` alone can't do camera capture); `ImageProcessing`
+  — false on simulator) and "Choose from Library"; both backed by `ImagePicker` (originally
+  `CameraImagePicker`, camera-only — renamed/generalized 2026-11-05 after the library path's
+  original SwiftUI-native `PhotosPicker` turned out to have a real bug: dismissing it after a
+  pick could cascade and close the whole parent entry sheet, silently losing the in-progress
+  pizza. Both camera and library now go through the same proven `UIViewControllerRepresentable`
+  wrapping `UIImagePickerController`, parameterized by `sourceType`); `ImageProcessing`
   (new `Services/` helper) downsizes the picked `UIImage` to a 1200px-longest-side cap and
   compresses to JPEG at 0.7 quality before it's stored in `PizzaEntry.photoData`; new
   `PizzaPhotoThumbnail` reusable view shows a small rounded thumbnail in both `MyRankingsView`
