@@ -30,6 +30,7 @@ struct PizzaEntryFormView: View {
     /// can tell "the user chose to leave" apart from an interactive swipe-down
     /// - only the latter should fall back to an implicit save.
     @State private var didDismissExplicitly = false
+    @State private var newlyEarnedAchievements: [AchievementDefinition] = []
 
     private var isCameraAvailable: Bool {
         UIImagePickerController.isSourceTypeAvailable(.camera)
@@ -155,16 +156,35 @@ struct PizzaEntryFormView: View {
                     persistEntry()
                 }
             }
+            .overlay(alignment: .top) {
+                if !newlyEarnedAchievements.isEmpty {
+                    AchievementUnlockedBanner(definitions: newlyEarnedAchievements)
+                        .padding(.top, 8)
+                        .transition(.move(edge: .top).combined(with: .opacity))
+                }
+            }
+            .animation(.spring(duration: 0.4), value: newlyEarnedAchievements)
         }
     }
 
     private func save() {
-        persistEntry()
+        let newlyEarned = persistEntry()
         didDismissExplicitly = true
-        dismiss()
+        guard !newlyEarned.isEmpty else {
+            dismiss()
+            return
+        }
+        // Let the "Achievement Unlocked" banner actually be seen before the sheet
+        // closes - dismissing immediately would hide it before it could render.
+        newlyEarnedAchievements = newlyEarned
+        Task {
+            try? await Task.sleep(for: .seconds(1.6))
+            dismiss()
+        }
     }
 
-    private func persistEntry() {
+    @discardableResult
+    private func persistEntry() -> [AchievementDefinition] {
         let entry = existingEntry ?? PizzaEntry()
         entry.crustScore = Int(crustScore)
         entry.sauceScore = Int(sauceScore)
@@ -183,7 +203,7 @@ struct PizzaEntryFormView: View {
 
         let allEntries = (try? modelContext.fetch(FetchDescriptor<PizzaEntry>())) ?? []
         let allRestaurants = (try? modelContext.fetch(FetchDescriptor<Restaurant>())) ?? []
-        AchievementEngine.evaluate(entries: allEntries, restaurants: allRestaurants, context: modelContext)
+        return AchievementEngine.evaluate(entries: allEntries, restaurants: allRestaurants, context: modelContext)
     }
 
     private func deleteExistingEntry() {

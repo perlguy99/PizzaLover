@@ -5,7 +5,7 @@
 
 import Foundation
 
-struct AchievementDefinition: Identifiable {
+struct AchievementDefinition: Identifiable, Equatable {
     let id: String
     let title: String
     let description: String

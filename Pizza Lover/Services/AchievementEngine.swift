@@ -18,11 +18,19 @@ enum AchievementEngine {
     /// is passed separately (not derived from entries) because favorite/excluded status can be
     /// set on a restaurant before any pizza is ever logged there (e.g. favoriting straight from
     /// the Nearby list) — deriving it from entries alone would miss that.
-    static func evaluate(entries: [PizzaEntry], restaurants: [Restaurant], context: ModelContext) {
+    ///
+    /// Returns the definitions that became newly earned on *this* call (empty if none did),
+    /// so a caller can show an in-the-moment "achievement unlocked" banner.
+    @discardableResult
+    static func evaluate(entries: [PizzaEntry], restaurants: [Restaurant], context: ModelContext) -> [AchievementDefinition] {
+        var newlyEarned: [AchievementDefinition] = []
         for definition in AchievementDefinition.all where isEarned(definition, entries: entries, restaurants: restaurants) {
-            award(definition.id, context: context)
+            if award(definition.id, context: context) {
+                newlyEarned.append(definition)
+            }
         }
         try? context.save()
+        return newlyEarned
     }
 
     private static func isEarned(_ definition: AchievementDefinition, entries: [PizzaEntry], restaurants: [Restaurant]) -> Bool {
@@ -207,13 +215,17 @@ enum AchievementEngine {
         return grouped.values.map(\.count).max() ?? 0
     }
 
-    private static func award(_ id: String, context: ModelContext) {
+    /// Inserts the `Achievement` record if it isn't already earned. Returns whether this
+    /// call was the one that newly earned it (false if it was already earned before).
+    @discardableResult
+    private static func award(_ id: String, context: ModelContext) -> Bool {
         let predicate = #Predicate<Achievement> { $0.id == id }
         let alreadyEarned = (try? context.fetch(FetchDescriptor(predicate: predicate)))?.isEmpty == false
-        guard !alreadyEarned else { return }
+        guard !alreadyEarned else { return false }
 
         let achievement = Achievement()
         achievement.id = id
         context.insert(achievement)
+        return true
     }
 }
