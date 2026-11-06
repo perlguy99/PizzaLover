@@ -76,6 +76,23 @@ struct SettingsView: View {
             } footer: {
                 Text("If you like Pizza Lover, a rating or a look at my other apps helps a lot. Thanks for the support!")
             }
+
+            Section {
+                Link(destination: URL(string: "https://github.com/perlguy99/PizzaLover/blob/main/PRIVACY.md")!) {
+                    Label("Privacy Policy", systemImage: "hand.raised.fill")
+                }
+                Link(destination: URL(string: "https://github.com/perlguy99/PizzaLover/blob/main/SUPPORT.md")!) {
+                    Label("Support", systemImage: "questionmark.circle.fill")
+                }
+            }
+
+            Section {
+                Text("Copyright © 2026, Brent Danger Michalski")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+            }
+            .listRowBackground(Color.clear)
         }
         .navigationTitle("Settings")
     }
