@@ -51,6 +51,12 @@ struct MyRankingsView: View {
                 ContentUnavailableView.search(text: searchText)
             } else {
                 List {
+                    Section {
+                        RankingsStatsHeader(entries: entries)
+                    }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets())
+
                     ForEach(sortedEntries) { entry in
                         NavigationLink {
                             PizzaEntryDetailView(entry: entry)
@@ -109,6 +115,61 @@ struct MyRankingsView: View {
             modelContext.delete(sortedEntries[index])
         }
         try? modelContext.save()
+    }
+}
+
+/// Quick-glance totals shown above the rankings list - the app had no moment anywhere
+/// that celebrated the collected data, so this surfaces it right where it's most seen.
+/// Always built from the full, unfiltered `entries` list, not whatever the search/sort
+/// state happens to be showing.
+private struct RankingsStatsHeader: View {
+    let entries: [PizzaEntry]
+
+    private var averageOverallScore: Double {
+        guard !entries.isEmpty else { return 0 }
+        let total = entries.reduce(0) { $0 + $1.overallTasteScore }
+        return Double(total) / Double(entries.count)
+    }
+
+    private var favoriteRestaurantName: String? {
+        let counts = Dictionary(grouping: entries) { $0.restaurant?.name ?? "Unknown" }
+            .mapValues(\.count)
+        return counts.max { $0.value < $1.value }?.key
+    }
+
+    var body: some View {
+        HStack(spacing: 0) {
+            StatColumn(value: "\(entries.count)", label: entries.count == 1 ? "Pizza" : "Pizzas")
+            Divider().frame(height: 36)
+            StatColumn(value: String(format: "%.1f", averageOverallScore), label: "Avg Score")
+            Divider().frame(height: 36)
+            StatColumn(value: favoriteRestaurantName ?? "—", label: "Top Spot", isCompact: true)
+        }
+        .padding(.vertical, 12)
+        .frame(maxWidth: .infinity)
+        .background(.quaternary, in: RoundedRectangle(cornerRadius: 12))
+        .padding(.horizontal)
+        .padding(.vertical, 4)
+    }
+}
+
+private struct StatColumn: View {
+    let value: String
+    let label: String
+    var isCompact: Bool = false
+
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(value)
+                .font(isCompact ? .subheadline.bold() : .title3.bold())
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            Text(label)
+                .font(.caption2)
+                .foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 4)
     }
 }
 
