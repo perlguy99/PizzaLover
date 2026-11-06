@@ -17,13 +17,13 @@ struct NearbyPizzaListView: View {
     @State private var hasStartedLocating = false
 
     var body: some View {
-        content
+        rootContent
             .navigationTitle("Nearby Pizza")
             .navigationDestination(item: $selectedRestaurant) { restaurant in
                 RestaurantDetailView(restaurant: restaurant)
             }
             .task {
-                startLocating()
+                startLocatingIfAlreadyAuthorized()
             }
             .onChange(of: locationKey) { _, _ in
                 guard let coordinate = locationService.currentLocation else { return }
@@ -35,6 +35,20 @@ struct NearbyPizzaListView: View {
     private var locationKey: String? {
         guard let coordinate = locationService.currentLocation else { return nil }
         return "\(coordinate.latitude),\(coordinate.longitude)"
+    }
+
+    @ViewBuilder
+    private var rootContent: some View {
+        switch locationService.authorizationStatus {
+        case .notDetermined:
+            LocationPrimerView(message: "Pizza Lover uses your location to find pizza places near you. You'll get the system prompt next.") {
+                locationService.requestPermission()
+            }
+        case .denied, .restricted:
+            LocationAccessDeniedView(message: "Location access was denied, so nearby pizza places can't be found. Turn it back on in Settings to use this tab.")
+        default:
+            content
+        }
     }
 
     @ViewBuilder
@@ -111,10 +125,12 @@ struct NearbyPizzaListView: View {
         }
     }
 
-    private func startLocating() {
+    /// Only fires the (silent, already-granted) location fetch - never the system
+    /// permission prompt itself, which now only fires from `LocationPrimerView`'s button.
+    private func startLocatingIfAlreadyAuthorized() {
         guard !hasStartedLocating else { return }
+        guard locationService.authorizationStatus == .authorizedWhenInUse || locationService.authorizationStatus == .authorizedAlways else { return }
         hasStartedLocating = true
-        locationService.requestPermission()
         locationService.requestLocation()
     }
 

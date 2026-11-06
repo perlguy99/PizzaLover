@@ -30,6 +30,28 @@ struct RandomPizzaPickerView: View {
     @State private var hasStartedLocating = false
 
     var body: some View {
+        Group {
+            switch locationService.authorizationStatus {
+            case .notDetermined:
+                LocationPrimerView(message: "Pizza Lover uses your location to find a random nearby pizza spot. You'll get the system prompt next.") {
+                    locationService.requestPermission()
+                }
+            case .denied, .restricted:
+                LocationAccessDeniedView(message: "Location access was denied, so a random nearby pick can't be found. Turn it back on in Settings to use this tab.")
+            default:
+                pickerContent
+            }
+        }
+        .navigationTitle("Random Pizza")
+        .task {
+            startLocatingIfAlreadyAuthorized()
+        }
+        .onChange(of: locationKey) { _, _ in
+            search()
+        }
+    }
+
+    private var pickerContent: some View {
         VStack(spacing: 24) {
             Picker("Radius", selection: $radius) {
                 ForEach(RadiusOption.allCases) { option in
@@ -56,21 +78,14 @@ struct RandomPizzaPickerView: View {
 
             Spacer()
 
-            content
+            resultContent
 
             Spacer()
-        }
-        .navigationTitle("Random Pizza")
-        .task {
-            startLocating()
-        }
-        .onChange(of: locationKey) { _, _ in
-            search()
         }
     }
 
     @ViewBuilder
-    private var content: some View {
+    private var resultContent: some View {
         if let pickedRestaurant {
             // Swappable result presentation: a future fancier "spin" UI can
             // replace just this subview without touching the pick logic above.
@@ -115,10 +130,12 @@ struct RandomPizzaPickerView: View {
         return "\(coordinate.latitude),\(coordinate.longitude)"
     }
 
-    private func startLocating() {
+    /// Only fires the (silent, already-granted) location fetch - never the system
+    /// permission prompt itself, which now only fires from `LocationPrimerView`'s button.
+    private func startLocatingIfAlreadyAuthorized() {
         guard !hasStartedLocating else { return }
+        guard locationService.authorizationStatus == .authorizedWhenInUse || locationService.authorizationStatus == .authorizedAlways else { return }
         hasStartedLocating = true
-        locationService.requestPermission()
         locationService.requestLocation()
     }
 
