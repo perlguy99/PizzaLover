@@ -11,23 +11,30 @@ private struct DeveloperApp: Identifiable {
     let name: String
     let subtitle: String
     let appStoreURL: URL
+    /// Asset catalog name - real App Store icon artwork, pulled from the
+    /// iTunes Lookup API and bundled directly rather than fetched at
+    /// runtime, same as how these apps' names/links were sourced.
+    let iconAssetName: String
 }
 
 private let otherApps: [DeveloperApp] = [
     DeveloperApp(
         name: "Photo Jigsaw: Personal Puzzles",
         subtitle: "Turn your own photos into jigsaw puzzles",
-        appStoreURL: URL(string: "https://apps.apple.com/us/app/photo-jigsaw-personal-puzzles/id6771174544")!
+        appStoreURL: URL(string: "https://apps.apple.com/us/app/photo-jigsaw-personal-puzzles/id6771174544")!,
+        iconAssetName: "PhotoJigsawIcon"
     ),
     DeveloperApp(
         name: "Mindless Jigsaw: Calm Puzzles",
         subtitle: "Calm, ad-free jigsaw puzzles",
-        appStoreURL: URL(string: "https://apps.apple.com/us/app/mindless-jigsaw-calm-puzzles/id6763145102")!
+        appStoreURL: URL(string: "https://apps.apple.com/us/app/mindless-jigsaw-calm-puzzles/id6763145102")!,
+        iconAssetName: "MindlessJigsawIcon"
     ),
     DeveloperApp(
         name: "Trio: Pattern Match Puzzle",
         subtitle: "A fast pattern-matching puzzle game",
-        appStoreURL: URL(string: "https://apps.apple.com/us/app/trio-pattern-match-puzzle/id6806417325")!
+        appStoreURL: URL(string: "https://apps.apple.com/us/app/trio-pattern-match-puzzle/id6806417325")!,
+        iconAssetName: "TrioIcon"
     ),
 ]
 
@@ -47,12 +54,20 @@ struct SettingsView: View {
             Section {
                 ForEach(otherApps) { app in
                     Link(destination: app.appStoreURL) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(app.name)
-                                .foregroundStyle(.primary)
-                            Text(app.subtitle)
-                                .font(.caption)
-                                .foregroundStyle(.secondary)
+                        HStack(spacing: 12) {
+                            Image(app.iconAssetName)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 44, height: 44)
+                                .clipShape(RoundedRectangle(cornerRadius: 10))
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(app.name)
+                                    .foregroundStyle(.primary)
+                                Text(app.subtitle)
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                            }
                         }
                     }
                 }
