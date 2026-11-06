@@ -35,17 +35,20 @@ struct MyRankingsView: View {
     @State private var sort: RankingSort = .overallTaste
     @State private var isShowingAddFrozen = false
     @State private var frozenRestaurantToLog: Restaurant?
+    @State private var searchText = ""
     @Query(sort: [SortDescriptor(\PizzaEntry.overallTasteScore, order: .reverse)])
     private var entries: [PizzaEntry]
 
     var body: some View {
         Group {
-            if sortedEntries.isEmpty {
+            if entries.isEmpty {
                 ContentUnavailableView {
                     Label("No Pizzas Logged Yet", systemImage: "fork.knife")
                 } description: {
                     Text("Log a pizza from a restaurant's detail screen, or add a frozen pizza from home, to see it ranked here.")
                 }
+            } else if sortedEntries.isEmpty {
+                ContentUnavailableView.search(text: searchText)
             } else {
                 List {
                     ForEach(sortedEntries) { entry in
@@ -60,6 +63,7 @@ struct MyRankingsView: View {
             }
         }
         .navigationTitle("My Rankings")
+        .searchable(text: $searchText, prompt: "Search by restaurant")
         .toolbar {
             ToolbarItem(placement: .topBarLeading) {
                 Button {
@@ -89,7 +93,15 @@ struct MyRankingsView: View {
     }
 
     private var sortedEntries: [PizzaEntry] {
-        entries.sorted(using: sort.sortDescriptor)
+        let filtered: [PizzaEntry]
+        if searchText.trimmingCharacters(in: .whitespaces).isEmpty {
+            filtered = entries
+        } else {
+            filtered = entries.filter {
+                ($0.restaurant?.name ?? "").localizedCaseInsensitiveContains(searchText)
+            }
+        }
+        return filtered.sorted(using: sort.sortDescriptor)
     }
 
     private func deleteEntries(at offsets: IndexSet) {
