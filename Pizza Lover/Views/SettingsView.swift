@@ -41,6 +41,16 @@ private let otherApps: [DeveloperApp] = [
 /// Minimal settings screen. The app has no account system and almost nothing
 /// to configure beyond a cross-promo list of the developer's other apps.
 struct SettingsView: View {
+    @Environment(\.modelContext) private var modelContext
+    @State private var isShowingResetConfirmation = false
+
+    private var versionString: String {
+        let bundle = Bundle.main
+        let shortVersion = bundle.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
+        let buildNumber = bundle.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
+        return "Version \(shortVersion) (\(buildNumber))"
+    }
+
     var body: some View {
         Form {
             Section {
@@ -87,14 +97,42 @@ struct SettingsView: View {
             }
 
             Section {
+                Button("Reset All Data", role: .destructive) {
+                    isShowingResetConfirmation = true
+                }
+            } footer: {
+                Text("Permanently deletes every logged pizza, restaurant, and achievement. This can't be undone, and it also removes the data from iCloud.")
+            }
+
+            Section {
                 Text("Copyright © 2026, Brent Danger Michalski")
                     .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Text(versionString)
+                    .font(.caption2)
                     .foregroundStyle(.secondary)
                     .frame(maxWidth: .infinity, alignment: .center)
             }
             .listRowBackground(Color.clear)
         }
         .navigationTitle("Settings")
+        .confirmationDialog(
+            "Reset all data? This permanently deletes every logged pizza, restaurant, and achievement.",
+            isPresented: $isShowingResetConfirmation,
+            titleVisibility: .visible
+        ) {
+            Button("Reset All Data", role: .destructive) {
+                resetAllData()
+            }
+        }
+    }
+
+    private func resetAllData() {
+        try? modelContext.delete(model: PizzaEntry.self)
+        try? modelContext.delete(model: Restaurant.self)
+        try? modelContext.delete(model: Achievement.self)
+        try? modelContext.save()
     }
 }
 
