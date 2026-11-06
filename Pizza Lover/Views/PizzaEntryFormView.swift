@@ -182,7 +182,8 @@ struct PizzaEntryFormView: View {
         try? modelContext.save()
 
         let allEntries = (try? modelContext.fetch(FetchDescriptor<PizzaEntry>())) ?? []
-        AchievementEngine.evaluate(entries: allEntries, context: modelContext)
+        let allRestaurants = (try? modelContext.fetch(FetchDescriptor<Restaurant>())) ?? []
+        AchievementEngine.evaluate(entries: allEntries, restaurants: allRestaurants, context: modelContext)
     }
 
     private func deleteExistingEntry() {
