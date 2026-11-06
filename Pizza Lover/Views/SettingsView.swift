@@ -78,10 +78,10 @@ struct SettingsView: View {
             }
 
             Section {
-                Link(destination: URL(string: "https://github.com/perlguy99/PizzaLover/blob/main/PRIVACY.md")!) {
+                Link(destination: URL(string: "https://perlguy99.github.io/PizzaLover/privacy.html")!) {
                     Label("Privacy Policy", systemImage: "hand.raised.fill")
                 }
-                Link(destination: URL(string: "https://github.com/perlguy99/PizzaLover/blob/main/SUPPORT.md")!) {
+                Link(destination: URL(string: "https://perlguy99.github.io/PizzaLover/support.html")!) {
                     Label("Support", systemImage: "questionmark.circle.fill")
                 }
             }
