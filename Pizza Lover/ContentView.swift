@@ -12,17 +12,17 @@ struct ContentView: View {
     var body: some View {
         TabView {
             NavigationStack {
-                NearbyPizzaListView()
-            }
-            .tabItem {
-                Label("Nearby", systemImage: "map")
-            }
-
-            NavigationStack {
                 MyRankingsView()
             }
             .tabItem {
                 Label("My Rankings", systemImage: "list.star")
+            }
+
+            NavigationStack {
+                NearbyPizzaListView()
+            }
+            .tabItem {
+                Label("Nearby", systemImage: "map")
             }
 
             NavigationStack {
