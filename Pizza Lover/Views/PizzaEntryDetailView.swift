@@ -37,6 +37,13 @@ struct PizzaEntryDetailView: View {
                     Text(entry.date.formatted(date: .abbreviated, time: .shortened))
                         .font(.subheadline)
                         .foregroundStyle(.secondary)
+                    if let style = entry.style, !style.isEmpty {
+                        Text(style)
+                            .font(.caption.bold())
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                            .background(.quaternary, in: Capsule())
+                    }
                 }
 
                 VStack(alignment: .leading, spacing: 8) {

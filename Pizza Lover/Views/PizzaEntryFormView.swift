@@ -20,6 +20,31 @@ struct PizzaEntryFormView: View {
     @State private var toppingsScore: Double
     @State private var overallTasteScore: Double
     @State private var notes: String
+    @State private var selectedStyle: String
+    @State private var newStyleText: String = ""
+
+    @Query(sort: \PizzaEntry.date) private var allEntries: [PizzaEntry]
+
+    /// Sentinel tag for the "Add New Style..." picker row - never saved as-is,
+    /// just triggers showing the free-text field below it.
+    private let addNewStyleTag = "__add_new_style__"
+
+    /// Presets plus any style someone already typed in before, so a custom
+    /// style only ever needs to be typed once.
+    private var knownStyles: [String] {
+        let customStyles = Set(allEntries.compactMap(\.style)).subtracting(PizzaStyleOptions.presets)
+        return PizzaStyleOptions.presets + customStyles.sorted()
+    }
+
+    /// What actually gets saved: the typed name if "Add New Style…" is
+    /// selected, otherwise whatever's picked (nil for "None").
+    private var resolvedStyle: String? {
+        if selectedStyle == addNewStyleTag {
+            let trimmed = newStyleText.trimmingCharacters(in: .whitespacesAndNewlines)
+            return trimmed.isEmpty ? nil : trimmed
+        }
+        return selectedStyle.isEmpty ? nil : selectedStyle
+    }
 
     @State private var photoData: Data?
     @State private var isShowingPhotoSourceDialog = false
@@ -52,6 +77,7 @@ struct PizzaEntryFormView: View {
         _overallTasteScore = State(initialValue: 5)
         _notes = State(initialValue: "")
         _photoData = State(initialValue: nil)
+        _selectedStyle = State(initialValue: "")
     }
 
     init(existingEntry: PizzaEntry) {
@@ -63,6 +89,7 @@ struct PizzaEntryFormView: View {
         _overallTasteScore = State(initialValue: Double(existingEntry.overallTasteScore))
         _notes = State(initialValue: existingEntry.notes ?? "")
         _photoData = State(initialValue: existingEntry.photoData)
+        _selectedStyle = State(initialValue: existingEntry.style ?? "")
     }
 
     var body: some View {
@@ -73,6 +100,19 @@ struct PizzaEntryFormView: View {
                         isShowingPhotoSourceDialog = true
                     } onRemove: {
                         photoData = nil
+                    }
+                }
+
+                Section("Style") {
+                    Picker("Style", selection: $selectedStyle) {
+                        Text("None").tag("")
+                        ForEach(knownStyles, id: \.self) { style in
+                            Text(style).tag(style)
+                        }
+                        Text("Add New Style…").tag(addNewStyleTag)
+                    }
+                    if selectedStyle == addNewStyleTag {
+                        TextField("New style name", text: $newStyleText)
                     }
                 }
 
@@ -193,6 +233,7 @@ struct PizzaEntryFormView: View {
         let trimmedNotes = notes.trimmingCharacters(in: .whitespacesAndNewlines)
         entry.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
         entry.photoData = photoData
+        entry.style = resolvedStyle
 
         if existingEntry == nil, let restaurant {
             entry.restaurant = restaurant

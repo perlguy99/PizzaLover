@@ -190,9 +190,14 @@ private struct PizzaRankingRow: View {
                     Text(entry.restaurant?.name ?? "Unknown Restaurant")
                         .font(.headline)
                 }
-                Text(entry.date.formatted(date: .abbreviated, time: .shortened))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                HStack(spacing: 4) {
+                    Text(entry.date.formatted(date: .abbreviated, time: .shortened))
+                    if let style = entry.style, !style.isEmpty {
+                        Text("· \(style)")
+                    }
+                }
+                .font(.caption)
+                .foregroundStyle(.secondary)
                 Text("Crust \(entry.crustScore) · Sauce \(entry.sauceScore) · Toppings \(entry.toppingsScore) · Overall \(entry.overallTasteScore)")
                     .font(.subheadline)
             }

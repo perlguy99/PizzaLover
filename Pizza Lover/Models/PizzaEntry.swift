@@ -15,6 +15,7 @@ final class PizzaEntry {
     var overallTasteScore: Int = 5
     var notes: String?
     var photoData: Data?
+    var style: String?
 
     var restaurant: Restaurant?
 
