@@ -15,12 +15,26 @@ struct NearbyPizzaListView: View {
     @State private var placesService = PlacesService()
     @State private var selectedRestaurant: Restaurant?
     @State private var hasStartedLocating = false
+    @State private var isShowingSearch = false
 
     var body: some View {
         rootContent
             .navigationTitle("Nearby Pizza")
             .navigationDestination(item: $selectedRestaurant) { restaurant in
                 RestaurantDetailView(restaurant: restaurant)
+            }
+            .toolbar {
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button {
+                        isShowingSearch = true
+                    } label: {
+                        Image(systemName: "magnifyingglass")
+                    }
+                    .accessibilityLabel("Search for a Restaurant")
+                }
+            }
+            .sheet(isPresented: $isShowingSearch) {
+                SearchRestaurantView()
             }
             .task {
                 startLocatingIfAlreadyAuthorized()
@@ -198,7 +212,8 @@ struct NearbyPizzaListView: View {
     }
 }
 
-private struct NearbyPizzaRow: View {
+/// Not private - also reused by `SearchRestaurantView` for its results list.
+struct NearbyPizzaRow: View {
     let mapItem: MKMapItem
     let distanceText: String?
     let isFavorite: Bool
