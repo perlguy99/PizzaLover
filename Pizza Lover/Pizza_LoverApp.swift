@@ -24,8 +24,35 @@ struct Pizza_LoverApp: App {
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            LaunchContainerView()
         }
         .modelContainer(modelContainer)
+    }
+}
+
+/// Shows `SplashScreenView` over `ContentView` for a moment on launch, then
+/// fades it out - purely decorative, not gating on anything loading.
+private struct LaunchContainerView: View {
+    @State private var isShowingSplash = true
+
+    var body: some View {
+        ZStack {
+            ContentView()
+            if isShowingSplash {
+                // A plain opacity crossfade let My Rankings show through while
+                // the splash was still partway visible, and the two fork/knife
+                // icons + titles visually collided mid-transition. Sliding the
+                // splash off instead means the two never overlap the same
+                // screen space at once.
+                SplashScreenView()
+                    .transition(.move(edge: .bottom))
+            }
+        }
+        .task {
+            try? await Task.sleep(for: .seconds(1.8))
+            withAnimation(.easeInOut(duration: 0.4)) {
+                isShowingSplash = false
+            }
+        }
     }
 }
