@@ -20,6 +20,7 @@ struct PizzaEntryFormView: View {
     @State private var toppingsScore: Double
     @State private var overallTasteScore: Double
     @State private var notes: String
+    @State private var date: Date
     @State private var selectedStyle: String
     @State private var newStyleText: String = ""
 
@@ -76,6 +77,7 @@ struct PizzaEntryFormView: View {
         _toppingsScore = State(initialValue: 5)
         _overallTasteScore = State(initialValue: 5)
         _notes = State(initialValue: "")
+        _date = State(initialValue: Date())
         _photoData = State(initialValue: nil)
         _selectedStyle = State(initialValue: "")
     }
@@ -88,6 +90,7 @@ struct PizzaEntryFormView: View {
         _toppingsScore = State(initialValue: Double(existingEntry.toppingsScore))
         _overallTasteScore = State(initialValue: Double(existingEntry.overallTasteScore))
         _notes = State(initialValue: existingEntry.notes ?? "")
+        _date = State(initialValue: existingEntry.date)
         _photoData = State(initialValue: existingEntry.photoData)
         _selectedStyle = State(initialValue: existingEntry.style ?? "")
     }
@@ -101,6 +104,12 @@ struct PizzaEntryFormView: View {
                     } onRemove: {
                         photoData = nil
                     }
+                }
+
+                Section {
+                    DatePicker("Date", selection: $date, in: ...Date(), displayedComponents: .date)
+                } footer: {
+                    Text("Logging a pizza from the past? Set the real date here.")
                 }
 
                 Section("Style") {
@@ -234,6 +243,7 @@ struct PizzaEntryFormView: View {
         entry.notes = trimmedNotes.isEmpty ? nil : trimmedNotes
         entry.photoData = photoData
         entry.style = resolvedStyle
+        entry.date = date
 
         if existingEntry == nil, let restaurant {
             entry.restaurant = restaurant
