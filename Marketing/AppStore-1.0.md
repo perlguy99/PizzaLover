@@ -2,6 +2,8 @@
 
 Everything here is ready to paste into App Store Connect. Character counts are validated against Apple's limits. This is the first real App Store submission for this app - no App Store Connect record exists yet (see [[Pizza Lover]] in the vault), so this kit covers the full first-listing set.
 
+**Updated 2026-11-07:** Promotional Text, Keywords, and Description refreshed to cover three features that shipped after the kit was first written - pizza style tagging, restaurant search by name (not just nearby), and backdating a past entry's date. Everything else (app info table, URLs, category, age rating, privacy) is unchanged.
+
 ---
 
 ## 1. App Information
@@ -20,25 +22,28 @@ Everything here is ready to paste into App Store Connect. Character counts are v
 
 ## 2. Metadata (full text in the field-specific files alongside this one)
 
-### Promotional Text — 142/170 ✅
+### Promotional Text — 125/170 ✅
 ```
-Rate every pizza you eat - restaurant or frozen from home. Find nearby spots, let the app pick for you, and unlock 50 achievements. 100% free.
-```
-
-### Keywords — 94/100 ✅
-```
-restaurant,crust,sauce,toppings,log,tracker,nearby,foodie,reviews,journal,takeout,frozen,score
+Rate every pizza - restaurant, frozen, or from a trip. Tag the style, search anywhere, and unlock 50 achievements. 100% free.
 ```
 
-### Description — 1,412/4,000 ✅
+### Keywords — 100/100 ✅ (right at the limit)
+```
+restaurant,crust,sauce,toppings,log,tracker,nearby,foodie,reviews,journal,takeout,frozen,score,style
+```
+
+### Description — 1,686/4,000 ✅
 ```
 Track every pizza you eat and finally remember which spot, or which frozen brand, actually deserves another visit.
 
 RATE EVERY PIZZA, YOUR WAY
-Score crust, sauce, and toppings independently, plus your own gut-feel overall taste score that's never just an average of the other three. Add a photo and notes so you remember exactly what you ordered.
+Score crust, sauce, and toppings independently, plus your own gut-feel overall taste score that's never just an average of the other three. Tag the style, Neapolitan, Chicago deep dish, Detroit, and more, or add your own. Attach a photo and notes so you remember exactly what you ordered.
 
-FIND PIZZA NEARBY
-Search for pizza places around you using Apple Maps, see distance and contact info at a glance, and favorite the ones worth going back to.
+FIND PIZZA ANYWHERE
+Search for pizza places around you using Apple Maps, or look up a spot in another city by name to log a pizza from a trip. See distance and contact info at a glance, and favorite the ones worth going back to.
+
+LOG THE PAST, NOT JUST TODAY
+Forgot to log a pizza from last month? Set the real date on any entry, not just today.
 
 FROZEN PIZZA COUNTS TOO
 Didn't make it out? Log a frozen pizza from home just as easily, same scoring, same rankings, with its own snowflake badge so you can tell it apart.
@@ -71,7 +76,7 @@ See `Age Rating.md` and `App Privacy (Data Collection).md` in this folder - both
 ## 5. Not done yet
 
 - No App Store Connect app record created for this bundle ID.
-- Screenshots not produced - need a fresh set from the simulator or a real device covering My Rankings (with a few entries logged), the pizza entry form, Nearby, Random, and Achievements.
+- Screenshots not produced - need a fresh set from the simulator or a real device covering My Rankings (with a few entries logged, stats header visible), the pizza entry form (style picker + date field visible), Nearby, the restaurant search sheet, Random, and Achievements.
 - No app preview video - optional, worth considering once screenshots exist.
 - The in-app IAP product Brent may have considered earlier was removed with the paywall (2026-11-02) - no IAP setup needed in App Store Connect for this app.
 
