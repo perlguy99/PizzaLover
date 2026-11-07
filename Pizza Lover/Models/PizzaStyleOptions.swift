@@ -23,5 +23,7 @@ enum PizzaStyleOptions {
         "Grandma",
         "Greek",
         "California",
+        "St. Louis",
+        "Quad Cities",
     ]
 }
